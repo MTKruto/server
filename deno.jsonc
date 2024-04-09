@@ -4,7 +4,7 @@
     "build": "deno compile -A --unstable-kv --include worker.ts --output mtkruto-server https://raw.githubusercontent.com/MTKruto/server/main/main.ts"
   },
   "imports": {
-    "mtkruto/": "../MTKruto/",
+    "mtkruto/": "./MTKruto/",
     "std/": "https://deno.land/std@0.221.0/",
     "preact": "https://esm.sh/preact@10.20.1",
     "preact/": "https://esm.sh/preact@10.20.1/",
