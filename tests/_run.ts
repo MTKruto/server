@@ -28,6 +28,7 @@ const proc = new Deno.Command("deno", {
   args: ["run", "-A", MAIN, "--api-id", "1", "--api-hash", "aabbcc"],
   stdout: "piped",
 }).spawn();
+proc.unref();
 
 const dec = new TextDecoder();
 const reader = proc.stdout.getReader();
@@ -42,8 +43,6 @@ while (true) {
 await new Deno.Command("deno", { args: ["test", "--no-check", "-A", TESTS] })
   .spawn()
   .output();
-
-proc.unref();
 
 try {
   Deno.removeSync(path.join(ROOT, ".logs"), { recursive: true });
