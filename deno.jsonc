@@ -1,4 +1,5 @@
 {
+  "exclude": ["./MTKruto/"],
   "tasks": {
     "test": "deno run -A tests/_run.ts",
     "build": "deno compile -A --unstable-kv --include worker.ts --output mtkruto-server https://raw.githubusercontent.com/MTKruto/server/main/main.ts"

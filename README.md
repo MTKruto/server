@@ -4,7 +4,9 @@
   - [What is MTKruto Server?](#what-is-mtkruto-server)
   - [Is this a replacement for Bot API?](#is-this-a-replacement-for-bot-api)
   - [Why not just use Bot API?](#why-not-just-use-bot-api)
-- [Building from Source](#building-from-source)
+- [Installation](#installation)
+  - [Prebuilt Binaries](#prebuilt-binaries)
+  - [Building from Source](#building-from-source)
 - [CLI Arguments](#cli-arguments)
 - [Running](#running)
 - [Viewing Statistics](#viewing-statistics)
@@ -53,11 +55,27 @@ MTKruto Server if they would like to:
   issues, since doing so directly with Telegram clients requires logging in each
   time, or would otherwise result in errors like AUTH_KEY_DUPLICATED.
 
-## Building from Source
+## Installation
+
+### Prebuilt Binaries
+
+To download a prebuilt binary, visit
+[here](https://github.com/MTKruto/server/actions/workflows/ci.yml), open the
+most recent successful run, and you will see appropriate download links for each
+operating system in the Artifacts section.
+
+### Building from Source
 
 To build from source, you need to have [Deno](https://deno.land) installed.
-After making sure that it is properly installed, clone the repository, and build
-with the following command:
+After making sure that it is properly installed, clone the repository
+recursively:
+
+```shell
+git clone --depth 1 --recursive https://github.com/MTKruto/server
+cd server
+```
+
+And build using the following command:
 
 ```shell
 deno task build
