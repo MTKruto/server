@@ -32,7 +32,7 @@ jobs:
           path: ~/.cache/deno/deps
           key: ${{ runner.os }}-${{ hashFiles('deno.lock') }}
 
-      - run: deno compile -A --target ${{ matrix.target }} --unstable-kv --include worker.ts --output mtkruto-server main.ts
+      - run: BUILD_ARGS="--target ${{ matrix.target }}" deno task build
 
       - run: tar -czf mtkruto-server-${{ matrix.os }}.tar.gz mtkruto-server*
 
