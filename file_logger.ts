@@ -22,7 +22,7 @@ import { writeAllSync } from "std/io/write_all.ts";
 
 import { LoggingProvider } from "mtkruto/mod.ts";
 
-const THRESHOLD = 1; // TODO: change
+const THRESHOLD = 1000;
 /**
  * Creates a file logging provider for MTKruto.
  */
@@ -35,7 +35,7 @@ export function fileLogger(filename: string): LoggingProvider {
   });
   let entries = new Array<any[]>();
 
-  function flush() {
+  function write() {
     for (const entry of entries) {
       const text = enc.encode(
         entry.map((v) =>
@@ -48,15 +48,16 @@ export function fileLogger(filename: string): LoggingProvider {
   }
 
   function unload() {
-    flush();
+    write();
     removeEventListener("unload", unload);
   }
   addEventListener("unload", unload);
+  Deno.addSignalListener("SIGINT", unload);
 
   function log(...args: any[]) {
     entries.push(args);
     if (entries.length >= THRESHOLD) {
-      flush();
+      write();
     }
   }
 

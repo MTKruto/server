@@ -35,9 +35,9 @@ import { isFunctionDisallowed } from "./disallowed_functions.ts";
 import { ClientManager, ClientStats } from "./client_manager.ts";
 import { ALLOWED_METHODS, AllowedMethod } from "./allowed_methods.ts";
 
-const LOG_PATH = path.join(Deno.cwd(), ".logs");
+const LOG_PATH = path.join(Deno.cwd(), ".logs", "clients");
 if (!existsSync(LOG_PATH)) {
-  Deno.mkdirSync(LOG_PATH);
+  Deno.mkdirSync(LOG_PATH, { recursive: true });
 }
 let id = -1;
 let clientManager = new ClientManager(0, "");
