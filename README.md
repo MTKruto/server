@@ -20,7 +20,7 @@
   - [Polling](#polling)
   - [Webhooks](#webhooks)
 - [Client Libraries](#client-libraries)
-  - [TypeScript/JavaScript](#typescriptjavascript)
+  - [JavaScript](#javascript)
 - [Contributing](#contributing)
 - [Support](#support)
 - [Legal](#legal)
@@ -335,10 +335,11 @@ GET /:client-id/deleteWebhook
 Anyone is welcome to build client libraries for the API. The official client
 implementation that resides in [client/](./client/) can be taken as a reference.
 
-### TypeScript/JavaScript
+### JavaScript
 
 This is a client implementation that is maintained as part of the project.
-Homepage: <https://github.com/MTKruto/server/tree/main/client/>
+
+<https://github.com/MTKruto/server/tree/main/client/>
 
 ## Contributing
 
