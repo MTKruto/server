@@ -49,7 +49,7 @@ let clientManager = new ClientManager(0, "");
 addEventListener("message", async (e) => {
   const [_id, { _, args }] = e.data;
   if (id != -1) {
-    log.info("in", _, _id, args);
+    log.info("in", args, _, _id);
   }
   let result;
   try {
@@ -66,11 +66,14 @@ addEventListener("message", async (e) => {
         headers: { "x-error-type": "rpc" },
       }];
     } else {
-      console.error(err);
+      log.error(
+        `[${_id}]\nAn unexpected error occurred.`,
+        Deno.inspect(err, { colors: false }),
+      );
       result = [null, { status: 500 }];
     }
   }
-  log.info("out", _, _id, result ?? null);
+  log.info("out", result ?? null, _, _id);
   postMessage([_id, result ?? null]);
 });
 
@@ -111,15 +114,29 @@ function init(id_: number, apiId: number, apiHash: string) {
       file: new log.FileHandler("NOTSET", {
         filename: workerLogFile,
         formatter(record) {
-          const A = record.msg == "in" ? ">>>>>>>>>>" : "<<<<<<<<<<";
           const time = record.datetime.toISOString();
-          const name = record.args[0];
-          const id = (record.args[1] as string).toUpperCase();
-          const payload = JSON.stringify(record.args[2], null, 2)
-            .split("\n")
-            .map((v) => `    ${v}`)
-            .join("\n");
-          return `[${time}]\n    [${id}]\n    ${A} ${name}\n${payload}\n\n${ENTRY_SEPARATOR}\n`;
+          const payload = record.args.length >= 1
+            ? (typeof record.args[0] === "string"
+              ? record.args[0]
+              : JSON.stringify(record.args[0], null, 2))
+              .trim()
+              .split("\n")
+              .map((v) => `    ${v}`)
+              .join("\n")
+            : "";
+          if (record.msg == "out" || record.msg == "in") {
+            const A = record.msg == "in" ? ">>>>>>>>>>" : "<<<<<<<<<<";
+            const name = record.args[1];
+            const id = (record.args[2] as string).toUpperCase();
+            return `[${time}]\n    [${id}]\n    ${A} ${name}\n${payload}\n\n${ENTRY_SEPARATOR}\n`;
+          } else {
+            const msg = record.msg
+              .split("\n")
+              .map((v) => `    ${v}`)
+              .join("\n");
+            const maybePayload = payload.length ? `\n${payload}` : "";
+            return `[${time}]\n${msg}${maybePayload}\n\n${ENTRY_SEPARATOR}\n`;
+          }
         },
       }),
     },

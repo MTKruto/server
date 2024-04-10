@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import * as log from "std/log/mod.ts";
 import * as path from "std/path/mod.ts";
 import { existsSync } from "std/fs/mod.ts";
 
@@ -395,6 +396,7 @@ export class ClientManager {
     this.#webhookLoops.set(client, this.#webhookLoop(id, controller.signal));
   }
 
+  static #WEBHOOK_MAX_DISPATCHED_UPDATES = 100;
   #activeWebhookLoops = new Set<Client>();
   async #webhookLoop(id: string, signal: AbortSignal) {
     const client = await this.getClient(id);
@@ -411,7 +413,13 @@ export class ClientManager {
       do {
         let updatesToDispatch: Update[];
         if (updates.length) {
-          updatesToDispatch = updates.splice(0, updates.length);
+          updatesToDispatch = updates.splice(
+            0,
+            Math.min(
+              ClientManager.#WEBHOOK_MAX_DISPATCHED_UPDATES,
+              updates.length,
+            ),
+          );
         } else {
           await new Promise<void>((resolve) => {
             const onAbort = () => resolve();
@@ -421,7 +429,13 @@ export class ClientManager {
               signal.removeEventListener("abort", onAbort);
             });
           });
-          updatesToDispatch = updates.splice(0, updates.length);
+          updatesToDispatch = updates.splice(
+            0,
+            Math.min(
+              ClientManager.#WEBHOOK_MAX_DISPATCHED_UPDATES,
+              updates.length,
+            ),
+          );
         }
 
         if (signal.aborted) {
@@ -429,10 +443,19 @@ export class ClientManager {
         }
 
         this.#addToUpdateCleanupQueue(id, updatesToDispatch);
-        await fetch(url, {
-          method: "POST",
-          body: JSON.stringify(updatesToDispatch),
-        });
+        try {
+          await fetch(url, {
+            method: "POST",
+            body: JSON.stringify(updatesToDispatch),
+          });
+        } catch (err) {
+          log.error(
+            `[${id}]\nFailed to dispatch ${updatesToDispatch.length} update${
+              updatesToDispatch.length == 1 ? "" : "s"
+            } to webhook at ${url}.`,
+            Deno.inspect(err, { colors: false }),
+          );
+        }
       } while (!signal.aborted);
     } finally {
       this.#activeWebhookLoops.delete(client);
