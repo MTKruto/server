@@ -131,6 +131,7 @@ export class WorkerManager {
   }
 
   async startWebhookLoops() {
+    let started = 0;
     if (await fs.exists(ClientManager.KV_PATH)) {
       for await (const entry of Deno.readDir(ClientManager.KV_PATH)) {
         if (!entry.isFile) {
@@ -147,9 +148,11 @@ export class WorkerManager {
         if (webhook.value != null) {
           const worker = await this.getClientWorker(id);
           await this.call(worker, "startWebhookLoop", id);
+          ++started;
         }
       }
     }
+    return started;
   }
 
   async unload() {

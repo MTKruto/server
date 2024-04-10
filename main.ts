@@ -52,6 +52,11 @@ for (let i = 0; i < workerCount; i++) {
   log.info(`Started worker ${id + 1}.`);
 }
 
+const started = await workers.startWebhookLoops();
+if (started) {
+  log.info(`Started ${started} webhook loop${started == 1 ? "" : "s"}.`);
+}
+
 Deno.addSignalListener("SIGINT", async () => {
   await workers.unload();
   Deno.exit();

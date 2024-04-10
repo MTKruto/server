@@ -359,7 +359,10 @@ export class ClientManager {
     } catch {
       throw new InputError("Invalid webhook URL.");
     }
+    await this.deleteWebhook(id);
     await this.#kvMap.get(client)!.set([ClientManager.WEBHOOK], url);
+    this.#webhooks.set(client, url);
+    await this.startWebhookLoop(id);
   }
 
   async deleteWebhook(id: string) {

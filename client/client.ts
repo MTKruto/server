@@ -681,6 +681,14 @@ export class Client<C extends Context = Context> extends Composer<C> {
     }
   }
 
+  async setWebhook(url: string) {
+    await this.#request("setWebhook" as unknown as AllowedMethod, [url]);
+  }
+
+  async deleteWebhook() {
+    await this.#request("deleteWebhook" as unknown as AllowedMethod, []);
+  }
+
   invoke(function_: unknown) {
     return this.#request("invoke" as unknown as AllowedMethod, [function_]);
   }
