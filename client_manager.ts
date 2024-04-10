@@ -133,6 +133,9 @@ export class ClientManager {
       }
       client.invoke.use(this.#invokeErrorHandler(id));
       client.use(async (ctx) => {
+        if (ctx.connectionState || ctx.authorizationState) {
+          return;
+        }
         this.#lastUpdates.set(client, new Date());
         updates.push(ctx.toJSON());
         this.#updateResolvers.get(client)?.();
