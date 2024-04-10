@@ -20,6 +20,7 @@
 
 ///<reference lib="webworker"/>
 ///<reference lib="dom" />
+import * as log from "std/log/mod.ts";
 import * as path from "std/path/mod.ts";
 import { existsSync } from "std/fs/mod.ts";
 
@@ -27,7 +28,6 @@ import { InputError } from "mtkruto/0_errors.ts";
 import { setLogVerbosity } from "mtkruto/1_utilities.ts";
 import { functions, setLoggingProvider, types, Update } from "mtkruto/mod.ts";
 
-import { log } from "./log.ts";
 import { serialize } from "./tl_json.ts";
 import { deserialize } from "./tl_json.ts";
 import { fileLogger } from "./file_logger.ts";
@@ -35,15 +35,22 @@ import { isFunctionDisallowed } from "./disallowed_functions.ts";
 import { ClientManager, ClientStats } from "./client_manager.ts";
 import { ALLOWED_METHODS, AllowedMethod } from "./allowed_methods.ts";
 
-const LOG_PATH = path.join(Deno.cwd(), ".logs", "clients");
-if (!existsSync(LOG_PATH)) {
-  Deno.mkdirSync(LOG_PATH, { recursive: true });
+const WORKER_LOG_PATH = path.join(Deno.cwd(), ".logs", "workers");
+const CLIENT_LOG_PATH = path.join(Deno.cwd(), ".logs", "clients");
+if (!existsSync(CLIENT_LOG_PATH)) {
+  Deno.mkdirSync(CLIENT_LOG_PATH, { recursive: true });
+}
+if (!existsSync(WORKER_LOG_PATH)) {
+  Deno.mkdirSync(WORKER_LOG_PATH, { recursive: true });
 }
 let id = -1;
 let clientManager = new ClientManager(0, "");
 
 addEventListener("message", async (e) => {
   const [_id, { _, args }] = e.data;
+  if (id != -1) {
+    log.info("in", _, _id, args);
+  }
   let result;
   try {
     result = await (handlers as any)[_](...args as any[]);
@@ -63,6 +70,7 @@ addEventListener("message", async (e) => {
       result = [null, { status: 500 }];
     }
   }
+  log.info("out", _, _id, result ?? null);
   postMessage([_id, result ?? null]);
 });
 
@@ -77,6 +85,7 @@ const handlers = {
   setWebhook,
   deleteWebhook,
   startWebhookLoop,
+  unload,
 };
 export type Handler = typeof handlers;
 
@@ -86,10 +95,35 @@ function init(id_: number, apiId: number, apiHash: string) {
   }
   id = id_;
   clientManager = new ClientManager(apiId, apiHash);
-  const logFile = path.join(LOG_PATH, id + "");
+  const workerLogFile = path.join(WORKER_LOG_PATH, id + "");
+  const clientLogFile = path.join(CLIENT_LOG_PATH, id + "");
   setLogVerbosity(Infinity);
-  setLoggingProvider(fileLogger(logFile));
-  log.info(`Started worker ${id + 1}.`);
+  setLoggingProvider(fileLogger(clientLogFile));
+  const ENTRY_SEPARATOR = "-".repeat(25);
+  log.setup({
+    loggers: {
+      default: {
+        level: "INFO",
+        handlers: ["file"],
+      },
+    },
+    handlers: {
+      file: new log.FileHandler("NOTSET", {
+        filename: workerLogFile,
+        formatter(record) {
+          const A = record.msg == "in" ? ">>>>>>>>>>" : "<<<<<<<<<<";
+          const time = record.datetime.toISOString();
+          const name = record.args[0];
+          const id = (record.args[1] as string).toUpperCase();
+          const payload = JSON.stringify(record.args[2], null, 2)
+            .split("\n")
+            .map((v) => `    ${v}`)
+            .join("\n");
+          return `[${time}]\n    [${id}]\n    ${A} ${name}\n${payload}\n\n${ENTRY_SEPARATOR}\n`;
+        },
+      }),
+    },
+  });
 }
 
 function clientCount() {
@@ -177,4 +211,8 @@ async function deleteWebhook(
 
 async function startWebhookLoop(id: string) {
   await clientManager.startWebhookLoop(id);
+}
+
+function unload() {
+  dispatchEvent(new Event("unload"));
 }

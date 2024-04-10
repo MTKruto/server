@@ -49,7 +49,13 @@ const workers = new WorkerManager();
 for (let i = 0; i < workerCount; i++) {
   const id = workers.create();
   await workers.call(id, "init", id, apiId, apiHash);
+  log.info(`Started worker ${id + 1}.`);
 }
+
+Deno.addSignalListener("SIGINT", async () => {
+  await workers.unload();
+  Deno.exit();
+});
 
 Deno.serve({
   port,

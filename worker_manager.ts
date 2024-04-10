@@ -151,4 +151,12 @@ export class WorkerManager {
       }
     }
   }
+
+  async unload() {
+    const promises = new Array<Promise<void>>();
+    for (const worker of this.#workers.keys()) {
+      promises.push(this.call(worker, "unload"));
+    }
+    await Promise.all(promises);
+  }
 }

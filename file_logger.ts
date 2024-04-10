@@ -52,7 +52,6 @@ export function fileLogger(filename: string): LoggingProvider {
     removeEventListener("unload", unload);
   }
   addEventListener("unload", unload);
-  Deno.addSignalListener("SIGINT", unload);
 
   function log(...args: any[]) {
     entries.push(args);
