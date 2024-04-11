@@ -219,6 +219,7 @@ export class ClientManager {
   }
 
   #polls = new Set<Client>();
+  static #GET_UPDATES_MAX_UPDATES = 100;
   #updateResolvers = new Map<Client, () => void>();
   #getUpdatesControllers = new Map<Client, AbortController>();
   async #getUpdatesInner(id: string, timeoutSeconds: number) {
@@ -235,7 +236,10 @@ export class ClientManager {
     try {
       let updates = this.#updates.get(client);
       if (updates && updates.length) {
-        return updates.splice(0, updates.length);
+        return updates.splice(
+          0,
+          Math.min(ClientManager.#GET_UPDATES_MAX_UPDATES, updates.length),
+        );
       }
 
       controller = new AbortController();
@@ -253,7 +257,10 @@ export class ClientManager {
 
       updates = this.#updates.get(client);
       if (updates && updates.length) {
-        return updates.splice(0, updates.length);
+        return updates.splice(
+          0,
+          Math.min(ClientManager.#GET_UPDATES_MAX_UPDATES, updates.length),
+        );
       } else {
         return [];
       }
