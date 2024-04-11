@@ -188,7 +188,7 @@ is the same as this:
 POST /:client-id/exampleMethod
 Content-Type: application/json
 
-[1,  { "foo": false, "bar": true }]
+[1, { "foo": false, "bar": true }]
 ```
 
 > [!NOTE]
@@ -229,13 +229,15 @@ request.
 Here is an example payload which makes a ping request:
 
 ```json
-{
-  "_": "ping",
-  "ping_id": {
-    "_": "bigint",
-    "value": "123456"
+[
+  {
+    "_": "ping",
+    "ping_id": {
+      "_": "bigint",
+      "value": "123456"
+    }
   }
-}
+]
 ```
 
 Which can be called like:
@@ -244,13 +246,15 @@ Which can be called like:
 POST /:client-id/invoke
 Content-Type: application/json
 
-{
-  "_": "ping",
-  "ping_id": {
-    "_": "bigint",
-    "value": "123456"
+[
+  {
+    "_": "ping",
+    "ping_id": {
+      "_": "bigint",
+      "value": "123456"
+    }
   }
-}
+]
 ```
 
 As you may have already inferred, the TL objects are described in JSON as
@@ -303,6 +307,8 @@ for `timeout` seconds.
 
 ```http
 POST /:client-id/getUpdates
+
+[]
 ```
 
 On success, it returns an array of [Update](https://mtkru.to/types/Update)
