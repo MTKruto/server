@@ -19,7 +19,13 @@
  */
 
 import { log } from "./log.ts";
-import { DROP } from "./drop.ts";
+import {
+  assertArgCount,
+  badRequest,
+  drop,
+  methodNotAllowed,
+  notFound,
+} from "./responses.ts";
 import { addUser } from "./add_user.ts";
 import { displayStats } from "./stats.tsx";
 import { parseCliArgs } from "./cli_args.ts";
@@ -27,6 +33,7 @@ import { AllowedMethod } from "./client/deps.ts";
 import { WorkerManager } from "./worker_manager.ts";
 import { isAllowedMethod } from "./allowed_methods.ts";
 import { parseFormDataParams, parseGetParams } from "./params.ts";
+import { assertArg } from "std/path/_common/dirname.ts";
 
 const args = parseCliArgs(Deno.args);
 if (typeof args !== "object") {
@@ -72,39 +79,52 @@ Deno.serve({
 }, async (req) => {
   const url = new URL(req.url);
   if (req.method != "POST" && req.method != "GET") {
-    return DROP();
+    return methodNotAllowed();
   }
   if (url.pathname == statsPath) {
     const stats = await workers.getStats();
     return new Response(displayStats(stats));
   }
-  let params: any[];
-  try {
-    if (req.method == "POST") {
-      const contentType = req.headers.get("content-type");
-      if (contentType == "application/json") {
-        params = await req.json();
-        if (!Array.isArray(params)) {
-          return DROP();
-        }
-      } else if (contentType?.startsWith("multipart/form-data")) {
-        params = await parseFormDataParams(await req.formData());
-      } else {
-        return DROP();
-      }
-    } else {
-      params = parseGetParams(url.searchParams);
-    }
-  } catch (err) {
-    console.error(err);
-    return DROP();
-  }
   const parts = url.pathname.slice(1).split("/").map(decodeURIComponent);
   if (parts.length != 2) {
-    return DROP();
+    return notFound();
+  }
+  let params: any[];
+  if (req.method == "POST") {
+    const contentType = req.headers.get("content-type");
+    if (contentType == "application/json") {
+      try {
+        params = await req.json();
+        if (!Array.isArray(params)) {
+          return badRequest("An array of arguments was expected.");
+        }
+      } catch {
+        return badRequest("Invalid JSON");
+      }
+    } else if (contentType?.startsWith("multipart/form-data")) {
+      params = await parseFormDataParams(await req.formData());
+    } else {
+      if (contentType) {
+        return badRequest("Unsupported content type");
+      } else {
+        return badRequest(
+          "The content-type header was expected to be present.",
+        );
+      }
+    }
+  } else {
+    params = parseGetParams(url.searchParams);
   }
   const [id, method] = parts as [string, AllowedMethod | "getUpdates"];
-  return handleRequest(id, method, params);
+  try {
+    return await handleRequest(id, method, params);
+  } catch (err) {
+    if (err instanceof Response) {
+      return err;
+    } else {
+      throw err;
+    }
+  }
 });
 
 async function handleRequest(id: string, method: string, params: any[]) {
@@ -116,42 +136,19 @@ async function handleRequest(id: string, method: string, params: any[]) {
     case "getUpdates":
       return handleGetUpdates(worker, id);
     case "invoke":
-      if (params.length != 1) {
-        return Response.json("A single argument was expected.", {
-          status: 400,
-          headers: { "x-error-type": "input" },
-        });
-      }
+      assertArgCount(1, params.length);
       return await handleInvoke(worker, id, params[0]);
     case "setWebhook":
-      if (params.length != 1) {
-        return Response.json("A single argument was expected.", {
-          status: 400,
-          headers: { "x-error-type": "input" },
-        });
-      }
+      assertArgCount(1, params.length);
       return await handleSetWebhook(worker, id, params[0]);
     case "deleteWebhook":
-      if (params.length != 0) {
-        return Response.json("No arguments were expected.", {
-          status: 400,
-          headers: { "x-error-type": "input" },
-        });
-      }
+      assertArgCount(0, params.length);
       return await handleDeleteWebhook(worker, id);
     case "dropPendingUpdates":
-      if (params.length != 0) {
-        return Response.json("No arguments were expected.", {
-          status: 400,
-          headers: { "x-error-type": "input" },
-        });
-      }
+      assertArgCount(0, params.length);
       return await handleDropPendingUpdates(worker, id);
     default:
-      return Response.json("Invalid method", {
-        status: 400,
-        headers: { "x-error-type": "input" },
-      });
+      return badRequest("Invalid method");
   }
 }
 
@@ -163,7 +160,7 @@ async function handleMethod(
 ) {
   const result = await workers.call(worker, "serve", id, method, params);
   if (result === "DROP") {
-    return DROP();
+    return drop();
   } else {
     return Response.json(...result);
   }

@@ -21,7 +21,7 @@
 /**
  * Creates a response that closes the incoming TCP connection.
  */
-export function DROP() {
+export function drop() {
   return new Response(
     new ReadableStream({
       start(controller) {
@@ -29,4 +29,35 @@ export function DROP() {
       },
     }),
   );
+}
+
+export function badRequest(body: string) {
+  return Response.json(body, {
+    status: 400,
+    headers: { "x-error-type": "input" },
+  });
+}
+
+export function notFound() {
+  return Response.json("Not found", {
+    status: 404,
+  });
+}
+
+export function methodNotAllowed() {
+  return Response.json("Method not allowed", {
+    status: 403,
+  });
+}
+
+export function assertArgCount(actual: number, expected: number) {
+  if (expected == 0 && actual != 0) {
+    throw badRequest("No arguments were expected.");
+  }
+  if (expected == 1 && actual != 1) {
+    throw badRequest("A single argument was expected.");
+  }
+  if (actual != expected) {
+    throw badRequest(`${expected} arguments were expected.`);
+  }
 }
