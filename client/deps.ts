@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export * from "https://deno.land/std@0.221.0/assert/mod.ts";
+export { unreachable } from "https://deno.land/std@0.222.1/assert/unreachable.ts";
 
 export type {
   BotCommand,
