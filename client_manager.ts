@@ -461,4 +461,21 @@ export class ClientManager {
       this.#activeWebhookLoops.delete(client);
     }
   }
+
+  async dropPendingUpdates(id: string) {
+    const client = await this.getClient(id);
+    if (!client) {
+      return;
+    }
+    const kv = this.#kvMap.get(client);
+    if (!kv) {
+      return;
+    }
+    for await (
+      const update of kv.list({ prefix: [ClientManager.#PENDING_UPDATES] })
+    ) {
+      await kv.delete(update.key);
+    }
+    this.#updates.set(client, []);
+  }
 }

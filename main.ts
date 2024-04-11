@@ -139,7 +139,14 @@ async function handleRequest(id: string, method: string, params: any[]) {
         });
       }
       return await handleDeleteWebhook(worker, id);
-
+    case "dropPendingUpdates":
+      if (params.length != 0) {
+        return Response.json("No arguments were expected.", {
+          status: 400,
+          headers: { "x-error-type": "input" },
+        });
+      }
+      return await handleDropPendingUpdates(worker, id);
     default:
       return Response.json("Invalid method", {
         status: 400,
@@ -196,5 +203,10 @@ async function handleSetWebhook(worker: number, id: string, url: string) {
 
 async function handleDeleteWebhook(worker: number, id: string) {
   const result = await workers.call(worker, "deleteWebhook", id);
+  return Response.json(...result);
+}
+
+async function handleDropPendingUpdates(worker: number, id: string) {
+  const result = await workers.call(worker, "dropPendingUpdates", id);
   return Response.json(...result);
 }
