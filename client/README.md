@@ -11,7 +11,7 @@ Deno Deploy, Cloudflare Workers, and more.
 
 ### `connect()` and `authorize()`
 
-The [`Client`] class of this module does not have these methods, since it is
+The `Client` class of this module does not have these methods, since it is
 neither required to make a connection initially, nor to authorize.
 
 ### Telegram API Calls

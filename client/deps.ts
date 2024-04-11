@@ -19,6 +19,7 @@
  */
 
 export { unreachable } from "https://deno.land/std@0.222.1/assert/unreachable.ts";
+export { unimplemented } from "https://deno.land/std@0.222.1/assert/unimplemented.ts";
 
 export type {
   BotCommand,
