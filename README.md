@@ -209,7 +209,7 @@ what type of error it is.
 ## Methods
 
 A list of available methods, along with links to the documentation of each one
-of them, can be found [here](https://mtkru.to).
+of them, can be found [here](https://mtkru.to/methods).
 
 If you’re not already familiar with the structure of the documentation (e.g.,
 you are coming from outside of MTKruto), keep these points in mind:
