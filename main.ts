@@ -33,7 +33,6 @@ import { AllowedMethod } from "./client/deps.ts";
 import { WorkerManager } from "./worker_manager.ts";
 import { isAllowedMethod } from "./allowed_methods.ts";
 import { parseFormDataParams, parseGetParams } from "./params.ts";
-import { assertArg } from "std/path/_common/dirname.ts";
 
 const args = parseCliArgs(Deno.args);
 if (typeof args !== "object") {
@@ -136,16 +135,16 @@ async function handleRequest(id: string, method: string, params: any[]) {
     case "getUpdates":
       return handleGetUpdates(worker, id);
     case "invoke":
-      assertArgCount(1, params.length);
+      assertArgCount(params.length, 1);
       return await handleInvoke(worker, id, params[0]);
     case "setWebhook":
-      assertArgCount(1, params.length);
+      assertArgCount(params.length, 1);
       return await handleSetWebhook(worker, id, params[0]);
     case "deleteWebhook":
-      assertArgCount(0, params.length);
+      assertArgCount(params.length, 0);
       return await handleDeleteWebhook(worker, id);
     case "dropPendingUpdates":
-      assertArgCount(0, params.length);
+      assertArgCount(params.length, 0);
       return await handleDropPendingUpdates(worker, id);
     default:
       return badRequest("Invalid method");
