@@ -35,7 +35,7 @@ export async function addUser(apiId: number, apiHash: string): Promise<never> {
   await client.start({
     phone: () => prompt("Phone number:")!,
     code: () => prompt("Code:")!,
-    password: () => promptSecret("Password: ")!,
+    password: () => promptSecret("Password:")!,
   });
 
   console.log("Endpoint path:", "/" + id);
