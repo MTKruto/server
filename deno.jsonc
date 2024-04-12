@@ -1,4 +1,5 @@
 {
+  "lock": false,
   "unstable": ["kv"],
   "exclude": ["./MTKruto/"],
   "tasks": {
