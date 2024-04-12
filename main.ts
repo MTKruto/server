@@ -74,9 +74,9 @@ Deno.serve({
     log.info(`Listening for connections on port ${port}.`);
     log.info("Started MTKruto Server.");
   },
-}, async (req) => {
-  const url = new URL(req.url);
-  if (req.method != "POST" && req.method != "GET") {
+}, async (request) => {
+  const url = new URL(request.url);
+  if (request.method != "POST" && request.method != "GET") {
     return methodNotAllowed();
   }
   const parts = url.pathname.slice(1).split("/").map(decodeURIComponent);
@@ -84,11 +84,11 @@ Deno.serve({
     return notFound();
   }
   let params: any[];
-  if (req.method == "POST") {
-    const contentType = req.headers.get("content-type");
+  if (request.method == "POST") {
+    const contentType = request.headers.get("content-type");
     if (contentType == "application/json") {
       try {
-        params = await req.json();
+        params = await request.json();
         if (!Array.isArray(params)) {
           return badRequest("An array of arguments was expected.");
         }
@@ -96,7 +96,7 @@ Deno.serve({
         return badRequest("Invalid JSON");
       }
     } else if (contentType?.startsWith("multipart/form-data")) {
-      params = await parseFormDataParams(await req.formData());
+      params = await parseFormDataParams(await request.formData());
     } else {
       if (contentType) {
         return badRequest("Unsupported content type");
@@ -212,7 +212,17 @@ Deno.serve({
   onListen: () => {
     log.info(`Stats can be accessed from port ${statsPort}.`);
   },
-}, async () => {
-  const stats = await workers.getStats();
-  return new Response(displayStats(stats));
+}, async (request) => {
+  const url = new URL(request.url);
+  switch (url.pathname) {
+    case "/": {
+      const stats = await workers.getStats();
+      return new Response(displayStats(stats));
+    }
+    case "/write-logs":
+      await workers.unload();
+      return Response.json("Logs were written.");
+    default:
+      return notFound();
+  }
 });

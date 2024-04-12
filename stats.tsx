@@ -189,6 +189,15 @@ function Stats({ children: workers }: { children: WorkerStats[] }) {
             <Hr />
           </>
         ))}
+      <BlankLine />
+      SPECIAL PATHS
+      <NewLine />
+      <Indent>
+        /write-logs
+      </Indent>
+      <BlankLine />
+      <BlankLine />
+      <BlankLine />
     </>
   );
 }
