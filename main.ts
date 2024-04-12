@@ -169,7 +169,7 @@ async function handleGetUpdates(worker: number, id: string) {
   const enc = new TextEncoder();
   const response = await workers.call(worker, "canGetUpdates", id);
   if (response != null) {
-    return Response.json(...response)
+    return Response.json(...response);
   }
   return new Response(
     new ReadableStream(

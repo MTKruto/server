@@ -169,6 +169,9 @@ export class ClientManager {
       unlock();
     }
   }
+  mustGetClient(id: string) {
+    return this.#clients.get(id) ?? unreachable();
+  }
 
   count() {
     return this.#clients.size;
@@ -234,12 +237,12 @@ export class ClientManager {
   #updateResolvers = new Map<Client, () => void>();
   #getUpdatesControllers = new Map<Client, AbortController>();
   async #getUpdatesInner(id: string, timeoutSeconds: number) {
-    const client = this.#clients.get(id) ?? unreachable()
+    const client = this.mustGetClient(id);
     if (this.#webhooks.has(client)) {
-      unreachable()
+      unreachable();
     }
     if (this.#polls.has(client)) {
-      unreachable()
+      unreachable();
     }
     this.#polls.add(client);
     let controller: AbortController | null = null;
@@ -288,8 +291,8 @@ export class ClientManager {
     }
   }
 
-  async abortGetUpdates(id: string) {
-    const client = await this.getClient(id);
+  abortGetUpdates(id: string) {
+    const client = this.mustGetClient(id);
     const controller = this.#getUpdatesControllers.get(client);
     if (controller) {
       controller.abort();
@@ -318,6 +321,11 @@ export class ClientManager {
         lastUpdates === undefined ||
         Date.now() - lastUpdates.getTime() >= 5 * 60 * 1_000
       ) {
+        try {
+          await client.disconnect();
+        } catch {
+          //
+        }
         this.#clients.delete(id);
         this.#updates.delete(client);
 
@@ -326,8 +334,6 @@ export class ClientManager {
 
         this.#kvMap.get(client)?.close();
         this.#kvMap.delete(client);
-
-        await client.disconnect();
       }
     }
   }
@@ -417,7 +423,7 @@ export class ClientManager {
   static #WEBHOOK_MAX_DISPATCHED_UPDATES = 100;
   #activeWebhookLoops = new Set<Client>();
   async #webhookLoop(id: string, signal: AbortSignal) {
-    const client = await this.getClient(id);
+    const client = this.mustGetClient(id);
     const url = this.#webhooks.get(client);
     if (!url) {
       return;

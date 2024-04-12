@@ -90,7 +90,7 @@ const handlers = {
   startWebhookLoop,
   unload,
   dropPendingUpdates,
-  canGetUpdates
+  canGetUpdates,
 };
 export type Handler = typeof handlers;
 
@@ -243,7 +243,9 @@ async function dropPendingUpdates(
   return [null];
 }
 
-async function canGetUpdates(id: string): Promise<Parameters<typeof Response["json"]>|null> { 
-  await clientManager.canGetUpdates(id)
-  return null
+async function canGetUpdates(
+  id: string,
+): Promise<Parameters<typeof Response["json"]> | null> {
+  await clientManager.canGetUpdates(id);
+  return null;
 }
