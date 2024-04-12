@@ -614,6 +614,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
   async start() {
     this.#init();
     this.#running = true;
+    const retryIn = 5;
     while (this.#running) {
       try {
         const updates = await this.#request(
@@ -625,10 +626,10 @@ export class Client<C extends Context = Context> extends Composer<C> {
         }
       } catch (err) {
         console.trace(
-          "getUpdates request failed, retrying in 10 seconds. Reason:",
+          `getUpdates request failed, retrying in ${retryIn} seconds. Reason:`,
           err,
         );
-        await new Promise((r) => setTimeout(r, 10 * 1_000));
+        await new Promise((r) => setTimeout(r, retryIn * 1_000));
       }
     }
   }
