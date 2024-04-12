@@ -39,7 +39,7 @@ if (typeof args !== "object") {
   log.error(args);
   Deno.exit(1);
 }
-const { port, apiId, apiHash, workerCount, statsPath, addUser: addUser_ } =
+const { port, apiId, apiHash, workerCount, statsPort, addUser: addUser_ } =
   args;
 if (addUser_) {
   await addUser(apiId, apiHash);
@@ -73,16 +73,11 @@ Deno.serve({
   onListen: ({ port }) => {
     log.info(`Listening for connections on port ${port}.`);
     log.info("Started MTKruto Server.");
-    log.info(`Stats can be accessed from ${statsPath}.`);
   },
 }, async (req) => {
   const url = new URL(req.url);
   if (req.method != "POST" && req.method != "GET") {
     return methodNotAllowed();
-  }
-  if (url.pathname == statsPath) {
-    const stats = await workers.getStats();
-    return new Response(displayStats(stats));
   }
   const parts = url.pathname.slice(1).split("/").map(decodeURIComponent);
   if (parts.length != 2) {
@@ -210,3 +205,14 @@ async function handleDropPendingUpdates(worker: number, id: string) {
   const result = await workers.call(worker, "dropPendingUpdates", id);
   return Response.json(...result);
 }
+
+// ============= STATS SERVER ============= //
+Deno.serve({
+  port: statsPort,
+  onListen: () => {
+    log.info(`Stats can be accessed from port ${statsPort}.`);
+  },
+}, async () => {
+  const stats = await workers.getStats();
+  return new Response(displayStats(stats));
+});

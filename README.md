@@ -85,14 +85,14 @@ The output executable will be in the same directory you run the command from.
 
 ## CLI Arguments
 
-| Name       | Required | Description                               | Default |
-| ---------- | -------- | ----------------------------------------- | ------- |
-| --api-id   | Yes      | Telegram app API ID                       | N/A     |
-| --api-hash | Yes      | Telegram app API hash                     | N/A     |
-| --port     | No       | TCP port to accept connecions from        | 8000    |
-| --workers  | No       | Number of workers to use                  | 1       |
-| --stats    | No       | The path to make the stats available from | /stats  |
-| --add-user | No       | Add a user account                        | N/A     |
+| Name         | Required | Description                               | Default |
+| ------------ | -------- | ----------------------------------------- | ------- |
+| --api-id     | Yes      | Telegram app API ID                       | N/A     |
+| --api-hash   | Yes      | Telegram app API hash                     | N/A     |
+| --port       | No       | TCP port to accept connecions from        | 8000    |
+| --workers    | No       | Number of workers to use                  | 1       |
+| --stats-port | No       | The port to make the stats available from | 3000    |
+| --add-user   | No       | Add a user account                        | N/A     |
 
 ## Running
 
@@ -105,7 +105,7 @@ mtkruto-server --api-id 123456 --api-hash 0123456789abcdef
 
 ## Viewing Statistics
 
-Statistics are accessible from the configured path, which defaults to /stats.
+Statistics are accessible from the configured port, which defaults to 3000.
 
 ## Bots
 

@@ -25,7 +25,7 @@ interface CliArgs {
   apiId: number;
   apiHash: string;
   workerCount: number;
-  statsPath: string;
+  statsPort: number;
   addUser: boolean;
 }
 
@@ -69,12 +69,12 @@ export function parseCliArgs(argsList: string[]): string | CliArgs {
   if (!port || port < 0 || port > 0xFFFF || port % 1 != 0) {
     return "Invalid port.";
   }
-  const statsPath = args["stats"] || "/stats";
-  if (typeof statsPath !== "string") {
-    return "Stats path must be a string.";
+  const statsPort = args["stats-port"] ?? 3000;
+  if (typeof statsPort !== "number") {
+    return "Stats port must be a number.";
   }
-  if (statsPath[0] != "/") {
-    return "Invalid stats path.";
+  if (!statsPort || statsPort < 0 || statsPort > 0xFFFF || statsPort % 1 != 0) {
+    return "Invalid stats port.";
   }
   const addUser = args["add-user"] ?? false;
   if (typeof addUser !== "boolean") {
@@ -96,7 +96,7 @@ export function parseCliArgs(argsList: string[]): string | CliArgs {
     apiId,
     apiHash,
     workerCount,
-    statsPath,
+    statsPort,
     addUser,
   };
 }

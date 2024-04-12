@@ -26,7 +26,7 @@ const port = ["--port", "8080"];
 const apiId = ["--api-id", "1"];
 const apiHash = ["--api-hash", "abc"];
 const workerCount = ["--workers", "2"];
-const statsPath = ["--stats", "/stats"];
+const statsPort = ["--stats-port", "3030"];
 
 function assertFails(argList: string[]) {
   assert(typeof parseCliArgs(argList) === "string");
@@ -37,7 +37,7 @@ function assertOk(argList: string[]) {
 }
 
 Deno.test("port", () => {
-  const otherArgs = [...apiId, ...apiHash, ...workerCount, ...statsPath];
+  const otherArgs = [...apiId, ...apiHash, ...workerCount, ...statsPort];
 
   assertFails(["--port", "a", ...otherArgs]);
   assertFails(["--port", "0", ...otherArgs]);
@@ -49,7 +49,7 @@ Deno.test("port", () => {
 });
 
 Deno.test("apiId", () => {
-  const otherArgs = [...port, ...apiHash, ...workerCount, ...statsPath];
+  const otherArgs = [...port, ...apiHash, ...workerCount, ...statsPort];
 
   assertFails(["--api-id", "a", ...otherArgs]);
   assertFails(["--api-id", "0", ...otherArgs]);
@@ -57,7 +57,7 @@ Deno.test("apiId", () => {
 });
 
 Deno.test("apiHash", () => {
-  const otherArgs = [...port, ...apiId, ...workerCount, ...statsPath];
+  const otherArgs = [...port, ...apiId, ...workerCount, ...statsPort];
 
   assertFails(["--api-hash", "1", ...otherArgs]);
   assertFails(["--api-hash", " ", ...otherArgs]);
@@ -65,7 +65,7 @@ Deno.test("apiHash", () => {
 });
 
 Deno.test("workerCount", () => {
-  const otherArgs = [...port, ...apiId, ...apiHash, ...statsPath];
+  const otherArgs = [...port, ...apiId, ...apiHash, ...statsPort];
 
   assertFails(["--workers", "30000", ...otherArgs]);
   assertFails(["--workers", "1.1", ...otherArgs]);
@@ -74,10 +74,14 @@ Deno.test("workerCount", () => {
   assertOk(["--workers", "4", ...otherArgs]);
 });
 
-Deno.test("statsPath", () => {
+Deno.test("statsPort", () => {
   const otherArgs = [...port, ...apiId, ...apiHash, ...workerCount];
 
-  assertFails(["--stats", " ", ...otherArgs]);
-  assertFails(["--stats", "stats", ...otherArgs]);
-  assertOk(["--stats", "/stats", ...otherArgs]);
+  assertFails(["--stats-port", "a", ...otherArgs]);
+  assertFails(["--stats-port", "0", ...otherArgs]);
+  assertFails(["--stats-port", "-1", ...otherArgs]);
+  assertFails(["--stats-port", "1.1", ...otherArgs]);
+  assertFails(["--stats-port", "65537", ...otherArgs]);
+  assertOk(["--stats-port", "80", ...otherArgs]);
+  assertOk(["--stats-port", "3030", ...otherArgs]);
 });
