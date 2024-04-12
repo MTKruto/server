@@ -133,7 +133,7 @@ async function handleRequest(id: string, method: string, params: any[]) {
   }
   switch (method) {
     case "getUpdates":
-      return handleGetUpdates(worker, id);
+      return await handleGetUpdates(worker, id);
     case "invoke":
       assertArgCount(params.length, 1);
       return await handleInvoke(worker, id, params[0]);
@@ -165,8 +165,12 @@ async function handleMethod(
   }
 }
 
-function handleGetUpdates(worker: number, id: string) {
+async function handleGetUpdates(worker: number, id: string) {
   const enc = new TextEncoder();
+  const response = await workers.call(worker, "canGetUpdates", id);
+  if (response != null) {
+    return Response.json(...response)
+  }
   return new Response(
     new ReadableStream(
       {

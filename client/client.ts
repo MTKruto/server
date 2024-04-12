@@ -612,7 +612,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
 
   #running = false;
   async start() {
-    this.init();
+    await this.init();
     this.#running = true;
     const retryIn = 5;
     while (this.#running) {
@@ -625,6 +625,10 @@ export class Client<C extends Context = Context> extends Composer<C> {
           this.#queueUpdate(update);
         }
       } catch (err) {
+        if (err instanceof InputError) {
+          this.#running = false;
+          throw err;
+        }
         console.trace(
           `getUpdates request failed, retrying in ${retryIn} seconds. Reason:`,
           err,

@@ -20,7 +20,8 @@
 
 import * as log from "std/log/mod.ts";
 import * as path from "std/path/mod.ts";
-import { existsSync } from "std/fs/mod.ts";
+import { existsSync } from "std/fs/exists.ts";
+import { unreachable } from "std/assert/unreachable.ts";
 
 import { Mutex, Queue } from "mtkruto/1_utilities.ts";
 import {
@@ -218,17 +219,27 @@ export class ClientManager {
     }
   }
 
+  async canGetUpdates(id: string) {
+    const client = await this.getClient(id);
+    if (this.#webhooks.has(client)) {
+      throw new InputError("getUpdates is not allowed when a webhook is set.");
+    }
+    if (this.#polls.has(client)) {
+      throw new InputError("Another getUpdates is in progress.");
+    }
+  }
+
   #polls = new Set<Client>();
   static #GET_UPDATES_MAX_UPDATES = 100;
   #updateResolvers = new Map<Client, () => void>();
   #getUpdatesControllers = new Map<Client, AbortController>();
   async #getUpdatesInner(id: string, timeoutSeconds: number) {
-    const client = await this.getClient(id);
+    const client = this.#clients.get(id) ?? unreachable()
     if (this.#webhooks.has(client)) {
-      throw new InputError("Cannot getUpdates when a webhook is set.");
+      unreachable()
     }
     if (this.#polls.has(client)) {
-      throw new InputError("Another getUpdates is in progress.");
+      unreachable()
     }
     this.#polls.add(client);
     let controller: AbortController | null = null;
