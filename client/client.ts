@@ -92,7 +92,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
     }
   }
   #inited = false;
-  async #init() {
+  async init() {
     if (this.#inited) {
       return;
     }
@@ -612,7 +612,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
 
   #running = false;
   async start() {
-    this.#init();
+    this.init();
     this.#running = true;
     const retryIn = 5;
     while (this.#running) {
