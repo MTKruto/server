@@ -141,18 +141,9 @@ export function WorkerStats({ children: v }: { children: WorkerStats }) {
 }
 
 function MemoryStats() {
-  const total = Math.ceil(Deno.systemMemoryInfo().total / 1024 / 1024);
-
-  const free = Math.ceil(
-    parseInt(
-      Deno.readTextFileSync("/proc/meminfo").split("\n").filter((v) =>
-        v.startsWith("MemAvailable")
-      )[0].replace(
-        /[^0-9]/g,
-        "",
-      ),
-    ) / 1024,
-  );
+  const memoryInfo = Deno.systemMemoryInfo();
+  const total = Math.ceil(memoryInfo.total / 1024 / 1024);
+  const free = Math.ceil(memoryInfo.available / 1024);
 
   const used = total - free;
   const thisProcess = Math.ceil(Deno.memoryUsage().rss / 1024 / 1024);
