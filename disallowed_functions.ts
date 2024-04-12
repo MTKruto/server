@@ -71,12 +71,12 @@ export function isFunctionDisallowed(function_: any) {
   }
 
   if (DISALLOWED_FUNCTIONS.includes(function_[name])) {
-    return false;
+    return true;
   }
 
   if (isMtprotoFunction(function_)) {
-    return false;
+    return true;
   }
 
-  return true;
+  return false;
 }
