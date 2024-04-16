@@ -41,6 +41,8 @@ export const ALLOWED_METHODS = [
   "sendPoll",
   "editMessageText",
   "editInlineMessageText",
+  "editMessageMedia",
+  "editInlineMessageMedia",
   "editMessageReplyMarkup",
   "editInlineMessageReplyMarkup",
   "editMessageLiveLocation",
