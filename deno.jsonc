@@ -8,7 +8,7 @@
   },
   "imports": {
     "mtkruto/": "./MTKruto/",
-    "std/": "https://deno.land/std@0.222.1/",
+    "std/": "https://deno.land/std@0.223.0/",
     "preact": "https://esm.sh/preact@10.20.1",
     "preact/": "https://esm.sh/preact@10.20.1/",
     "ts_morph/": "https://deno.land/x/ts_morph@19.0.0/",

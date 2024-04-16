@@ -18,8 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export { unreachable } from "https://deno.land/std@0.222.1/assert/unreachable.ts";
-export { unimplemented } from "https://deno.land/std@0.222.1/assert/unimplemented.ts";
+export { unreachable } from "https://deno.land/std@0.223.0/assert/unreachable.ts";
+export { unimplemented } from "https://deno.land/std@0.223.0/assert/unimplemented.ts";
 
 export type {
   BotCommand,
@@ -50,8 +50,8 @@ export type {
   Story,
   Update,
   User,
-} from "https://deno.land/x/mtkruto@0.1.201/mod.ts";
-export { cleanObject } from "https://deno.land/x/mtkruto@0.1.201/utilities/0_object.ts";
-export { Composer } from "https://deno.land/x/mtkruto@0.1.201/client/1_composer.ts";
-export { resolve } from "https://deno.land/x/mtkruto@0.1.201/client/0_utilities.ts";
+} from "https://deno.land/x/mtkruto@0.1.400/mod.ts";
+export { cleanObject } from "https://deno.land/x/mtkruto@0.1.400/utilities/0_object.ts";
+export { Composer } from "https://deno.land/x/mtkruto@0.1.400/client/1_composer.ts";
+export { resolve } from "https://deno.land/x/mtkruto@0.1.400/client/0_utilities.ts";
 export type { AllowedMethod } from "../allowed_methods.ts";
