@@ -30,6 +30,7 @@ import {
   Context_,
   InactiveChat,
   InviteLink,
+  iterateReadableStream,
   Message,
   MessageAnimation,
   MessageAudio,
@@ -650,12 +651,39 @@ export class Client<C extends Context = Context> extends Composer<C> {
   ): Promise<Awaited<ReturnType<Client_[M]>>> {
     let useMultipart = false;
     let body: BodyInit;
-    if (args[1] instanceof Uint8Array) {
+    if (
+      args[1] instanceof Uint8Array || args[1] instanceof ReadableStream ||
+      (typeof args[1] === "object" && args[1] != null &&
+        (Symbol.iterator in args[1] || Symbol.asyncIterator in args[1]))
+    ) {
       useMultipart = true;
       body = new FormData();
       for (const arg of args) {
         if (arg instanceof Uint8Array) {
           body.append("_", new Blob([arg]));
+        } else if (arg instanceof ReadableStream) {
+          body.append(
+            "_",
+            new Blob(await Array.fromAsync(iterateReadableStream(arg))),
+          );
+        } else if (
+          typeof args[1] === "object" && args[1] != null &&
+          Symbol.iterator in args[1]
+        ) {
+          body.append(
+            "_",
+            new Blob(Array.from(args[1] as Iterable<Uint8Array>)),
+          );
+        } else if (
+          typeof args[1] === "object" && args[1] != null &&
+          Symbol.asyncIterator in args[1]
+        ) {
+          body.append(
+            "_",
+            new Blob(
+              await Array.fromAsync(args[1] as AsyncIterable<Uint8Array>),
+            ),
+          );
         } else {
           body.append("_", JSON.stringify(arg));
         }

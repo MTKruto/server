@@ -52,6 +52,7 @@ export type {
   User,
 } from "https://deno.land/x/mtkruto@0.1.400/mod.ts";
 export { cleanObject } from "https://deno.land/x/mtkruto@0.1.400/utilities/0_object.ts";
+export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.1.400/utilities/1_misc.ts";
 export { Composer } from "https://deno.land/x/mtkruto@0.1.400/client/1_composer.ts";
 export { resolve } from "https://deno.land/x/mtkruto@0.1.400/client/0_utilities.ts";
 export type { AllowedMethod } from "../allowed_methods.ts";
