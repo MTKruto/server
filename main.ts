@@ -96,7 +96,7 @@ Deno.serve({
         return badRequest("Invalid JSON");
       }
     } else if (contentType?.startsWith("multipart/form-data")) {
-      params = await parseFormDataParams(await request.formData());
+      params = parseFormDataParams(await request.formData());
     } else {
       if (contentType) {
         return badRequest("Unsupported content type");

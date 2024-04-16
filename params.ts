@@ -43,13 +43,11 @@ export function parseGetParams(searchParams: URLSearchParams) {
   return args;
 }
 
-export async function parseFormDataParams(formData: FormData) {
+export function parseFormDataParams(formData: FormData) {
   const args = [];
   for (const v of formData.values()) {
     args.push(
-      typeof v === "string"
-        ? JSON.parse(v)
-        : new Uint8Array(await v.arrayBuffer()),
+      typeof v === "string" ? JSON.parse(v) : v.stream,
     );
   }
   return args;
