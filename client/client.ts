@@ -22,6 +22,8 @@ import {
   AllowedMethod,
   BotCommand,
   BusinessConnection,
+  InlineQueryAnswer,
+  CallbackQueryAnswer,
   Chat,
   ChatMember,
   cleanObject,
@@ -1108,6 +1110,13 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= CALLBACK QUERIES ========================= //
   //
 
+
+   sendCallbackQuery(
+    ...args: Parameters<Client_["sendCallbackQuery"]>
+  ): Promise<CallbackQueryAnswer> {
+   return  this.#request("sendCallbackQuery", args);
+  }
+
   async answerCallbackQuery(
     ...args: Parameters<Client_["answerCallbackQuery"]>
   ): Promise<void> {
@@ -1117,6 +1126,13 @@ export class Client<C extends Context = Context> extends Composer<C> {
   //
   // ========================= INLINE QUERIES ========================= //
   //
+
+
+  sendInlineQuery(
+    ...args: Parameters<Client_["sendInlineQuery"]>
+  ): Promise<InlineQueryAnswer> {
+   return  this.#request("sendInlineQuery", args);
+  }
 
   async answerInlineQuery(
     ...args: Parameters<Client_["answerInlineQuery"]>
