@@ -26,7 +26,9 @@ import { Mutex } from "mtkruto/1_utilities.ts";
 import type { Handler, WorkerStats } from "./worker.ts";
 import { ClientManager } from "./client_manager.ts";
 
-const workerUrl = path.toFileUrl(path.join(import.meta.dirname!, "worker.ts"));
+const workerUrl = path.toFileUrl(
+  path.join(path.dirname(path.fromFileUrl(import.meta.url)), "worker.ts"),
+);
 
 interface Worker_ {
   worker: Worker;
