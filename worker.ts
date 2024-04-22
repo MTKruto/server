@@ -30,6 +30,7 @@ import { functions, setLoggingProvider, types, Update } from "mtkruto/mod.ts";
 
 import { serialize } from "./tl_json.ts";
 import { deserialize } from "./tl_json.ts";
+import { transform } from "./transform.ts";
 import { fileLogger } from "./file_logger.ts";
 import { isFunctionDisallowed } from "./disallowed_functions.ts";
 import { ClientManager, ClientStats } from "./client_manager.ts";
@@ -163,7 +164,7 @@ async function serve(
   const client = await clientManager.getClient(id);
   // deno-lint-ignore ban-ts-comment
   // @ts-ignore
-  const result = await client[method](...args);
+  const result = transform(await client[method](...args));
   if (result !== undefined) {
     return [result];
   } else {

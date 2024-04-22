@@ -22,7 +22,6 @@ import {
   AllowedMethod,
   BotCommand,
   BusinessConnection,
-  InlineQueryAnswer,
   CallbackQueryAnswer,
   Chat,
   ChatMember,
@@ -31,6 +30,7 @@ import {
   Composer,
   Context_,
   InactiveChat,
+  InlineQueryAnswer,
   InviteLink,
   iterateReadableStream,
   Message,
@@ -52,6 +52,7 @@ import {
   resolve,
   Sticker,
   Story,
+  transform,
   unimplemented,
   unreachable,
   Update,
@@ -701,7 +702,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
         : { "content-type": "application/json" },
       body,
     });
-    const result = await response.json();
+    const result = transform(await response.json());
     if (response.status == 200) {
       return result;
     } else {
@@ -1110,11 +1111,10 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= CALLBACK QUERIES ========================= //
   //
 
-
-   sendCallbackQuery(
+  sendCallbackQuery(
     ...args: Parameters<Client_["sendCallbackQuery"]>
   ): Promise<CallbackQueryAnswer> {
-   return  this.#request("sendCallbackQuery", args);
+    return this.#request("sendCallbackQuery", args);
   }
 
   async answerCallbackQuery(
@@ -1127,11 +1127,10 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= INLINE QUERIES ========================= //
   //
 
-
   sendInlineQuery(
     ...args: Parameters<Client_["sendInlineQuery"]>
   ): Promise<InlineQueryAnswer> {
-   return  this.#request("sendInlineQuery", args);
+    return this.#request("sendInlineQuery", args);
   }
 
   async answerInlineQuery(

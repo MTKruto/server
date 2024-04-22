@@ -24,11 +24,13 @@ export { unimplemented } from "https://deno.land/std@0.223.0/assert/unimplemente
 export type {
   BotCommand,
   BusinessConnection,
+  CallbackQueryAnswer,
   Chat,
   ChatMember,
   Client as Client_,
   Context as Context_,
   InactiveChat,
+  InlineQueryAnswer,
   InviteLink,
   Message,
   MessageAnimation,
@@ -36,11 +38,10 @@ export type {
   MessageContact,
   MessageDice,
   MessageDocument,
-  MessageLocation,CallbackQueryAnswer,
+  MessageLocation,
   MessagePhoto,
   MessagePoll,
   MessageSticker,
-  InlineQueryAnswer,
   MessageText,
   MessageVenue,
   MessageVideo,
@@ -57,3 +58,4 @@ export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.1.500/utili
 export { Composer } from "https://deno.land/x/mtkruto@0.1.500/client/1_composer.ts";
 export { resolve } from "https://deno.land/x/mtkruto@0.1.500/client/0_utilities.ts";
 export type { AllowedMethod } from "../allowed_methods.ts";
+export { transform } from "../transform.ts";
