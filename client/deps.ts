@@ -32,6 +32,7 @@ export type {
   InactiveChat,
   InlineQueryAnswer,
   InviteLink,
+  LiveStreamChannel,
   Message,
   MessageAnimation,
   MessageAudio,
@@ -52,6 +53,9 @@ export type {
   Story,
   Update,
   User,
+  VideoChat,
+  VideoChatActive,
+  VideoChatScheduled,
 } from "https://deno.land/x/mtkruto@0.1.600/mod.ts";
 export { cleanObject } from "https://deno.land/x/mtkruto@0.1.600/utilities/0_object.ts";
 export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.1.600/utilities/1_misc.ts";

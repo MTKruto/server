@@ -107,6 +107,14 @@ export const ALLOWED_METHODS = [
   "removeStoryFromHighlights",
   "blockUser",
   "unblockUser",
+  "downloadLiveStreamChunk",
+  "getLiveStreamChannels",
+  "getVideoChat",
+  "joinLiveStream",
+  "joinVideoChat",
+  "leaveVideoChat",
+  "scheduleVideoChat",
+  "startVideoChat",
 ] as const;
 
 export type AllowedMethod = (typeof ALLOWED_METHODS)[number];
