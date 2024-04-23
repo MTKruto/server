@@ -52,10 +52,10 @@ export type {
   Story,
   Update,
   User,
-} from "https://deno.land/x/mtkruto@0.1.500/mod.ts";
-export { cleanObject } from "https://deno.land/x/mtkruto@0.1.500/utilities/0_object.ts";
-export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.1.500/utilities/1_misc.ts";
-export { Composer } from "https://deno.land/x/mtkruto@0.1.500/client/1_composer.ts";
-export { resolve } from "https://deno.land/x/mtkruto@0.1.500/client/0_utilities.ts";
+} from "https://deno.land/x/mtkruto@0.1.600/mod.ts";
+export { cleanObject } from "https://deno.land/x/mtkruto@0.1.600/utilities/0_object.ts";
+export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.1.600/utilities/1_misc.ts";
+export { Composer } from "https://deno.land/x/mtkruto@0.1.600/client/1_composer.ts";
+export { resolve } from "https://deno.land/x/mtkruto@0.1.600/client/0_utilities.ts";
 export type { AllowedMethod } from "../allowed_methods.ts";
 export { transform } from "../transform.ts";
