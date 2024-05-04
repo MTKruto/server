@@ -30,7 +30,7 @@ export async function addUser(apiId: number, apiHash: string): Promise<never> {
   const id = "user" + crypto.randomUUID();
   ClientManager.createKvPath();
   const storage = new StorageDenoKV(path.join(ClientManager.KV_PATH, id));
-  const client = new Client(storage, apiId, apiHash);
+  const client = new Client({ storage, apiId, apiHash });
 
   await client.start({
     phone: () => prompt("Phone number:")!,

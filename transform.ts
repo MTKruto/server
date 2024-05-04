@@ -28,7 +28,8 @@ export function transform(a: any) {
         if (a[key] instanceof Date) {
           a[key] = { _: "date", value: a[key].toJSON() };
         } else if (
-          "_" in a[key] && a[key] == "date" && "value" in a[key] && typeof a[key].value === "string"
+          "_" in a[key] && a[key] == "date" && "value" in a[key] &&
+          typeof a[key].value === "string"
         ) {
           a[key] = new Date(a[key].value);
         } else {

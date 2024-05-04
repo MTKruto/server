@@ -109,15 +109,13 @@ export class ClientManager {
         throw new InputError("Invalid client ID");
       }
       const kvPath = path.join(ClientManager.KV_PATH, id);
-      const client = new Client(
-        new StorageDenoKV(kvPath),
-        this.#apiId,
-        this.#apiHash,
-        {
-          dropPendingUpdates: false,
-          transportProvider: transportProviderTcp(),
-        },
-      );
+      const client = new Client({
+        storage: new StorageDenoKV(kvPath),
+        apiId: this.#apiId,
+        apiHash: this.#apiHash,
+        dropPendingUpdates: false,
+        transportProvider: transportProviderTcp(),
+      });
       let updates = this.#updates.get(client);
       if (!updates) {
         this.#updates.set(client, updates = []);
@@ -148,8 +146,8 @@ export class ClientManager {
         }
       });
       if (id.startsWith("bot")) {
-        const token = id.slice(3);
-        await client.start(token);
+        const botToken = id.slice(3);
+        await client.start({ botToken });
       } else {
         await client.start({
           phone: () => {
