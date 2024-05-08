@@ -26,7 +26,7 @@ import { existsSync } from "std/fs/mod.ts";
 
 import { InputError } from "mtkruto/0_errors.ts";
 import { setLogVerbosity } from "mtkruto/1_utilities.ts";
-import { functions, setLoggingProvider, types, Update } from "mtkruto/mod.ts";
+import { functions, setLoggingProvider, types } from "mtkruto/mod.ts";
 
 import { serialize } from "./tl_json.ts";
 import { deserialize } from "./tl_json.ts";
@@ -201,7 +201,10 @@ async function stats(): Promise<WorkerStats> {
   };
 }
 
-async function getUpdates(id: string, timeout: number): Promise<Parameters<typeof Response["json"]>> {
+async function getUpdates(
+  id: string,
+  timeout: number,
+): Promise<Parameters<typeof Response["json"]>> {
   if (timeout < 0) {
     throw new InputError(`Invalid timeout: ${timeout}`);
   }
@@ -237,4 +240,3 @@ async function dropPendingUpdates(
   await clientManager.dropPendingUpdates(id);
   return [null];
 }
- 

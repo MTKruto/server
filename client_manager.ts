@@ -227,14 +227,16 @@ export class ClientManager {
       throw new InputError("getUpdates is not allowed when a webhook is set.");
     }
 
-    if (this.#polls.has(client)) { 
-    const controller = this.#getUpdatesControllers.get(client);
-    if (controller) {
-      controller.abort();
-    }
-    // just in case
-    this.#polls.delete(client);
-    this.#updateResolvers.delete(client);
+    if (this.#polls.has(client)) {
+      const controller = this.#getUpdatesControllers.get(client);
+      if (controller) {
+        controller.abort();
+      }
+      this.#getUpdatesControllers.delete(client);
+      // just in case
+      this.#polls.delete(client);
+      this.#updateResolvers.get(client)?.();
+      this.#updateResolvers.delete(client);
     }
     this.#polls.add(client);
     let controller: AbortController | null = null;
@@ -280,7 +282,10 @@ export class ClientManager {
       if (timeout != null) {
         clearTimeout(timeout);
       }
-      if (controller != null) {
+      if (
+        controller != null &&
+        this.#getUpdatesControllers.get(client) == controller
+      ) {
         this.#getUpdatesControllers.delete(client);
       }
     }
