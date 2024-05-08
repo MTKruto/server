@@ -18,8 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export { unreachable } from "https://deno.land/std@0.223.0/assert/unreachable.ts";
-export { unimplemented } from "https://deno.land/std@0.223.0/assert/unimplemented.ts";
+export { unreachable } from "https://deno.land/std@0.224.0/assert/unreachable.ts";
+export { unimplemented } from "https://deno.land/std@0.224.0/assert/unimplemented.ts";
 
 export type {
   BotCommand,
@@ -56,10 +56,10 @@ export type {
   VideoChat,
   VideoChatActive,
   VideoChatScheduled,
-} from "https://deno.land/x/mtkruto@0.1.600/mod.ts";
-export { cleanObject } from "https://deno.land/x/mtkruto@0.1.600/utilities/0_object.ts";
-export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.1.600/utilities/1_misc.ts";
-export { Composer } from "https://deno.land/x/mtkruto@0.1.600/client/1_composer.ts";
-export { resolve } from "https://deno.land/x/mtkruto@0.1.600/client/0_utilities.ts";
+} from "https://deno.land/x/mtkruto@0.1.708/mod.ts";
+export { cleanObject } from "https://deno.land/x/mtkruto@0.1.708/utilities/0_object.ts";
+export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.1.708/utilities/1_misc.ts";
+export { Composer } from "https://deno.land/x/mtkruto@0.1.708/client/1_composer.ts";
+export { resolve } from "https://deno.land/x/mtkruto@0.1.708/client/0_utilities.ts";
 export type { AllowedMethod } from "../allowed_methods.ts";
 export { transform } from "../transform.ts";
