@@ -128,7 +128,8 @@ async function handleRequest(id: string, method: string, params: any[]) {
   }
   switch (method) {
     case "getUpdates":
-      return await handleGetUpdates(worker, id);
+      assertArgCount(params.length, 1);
+      return await handleGetUpdates(worker, id, params[0]);
     case "invoke":
       assertArgCount(params.length, 1);
       return await handleInvoke(worker, id, params[0]);
@@ -160,30 +161,9 @@ async function handleMethod(
   }
 }
 
-async function handleGetUpdates(worker: number, id: string) {
-  const enc = new TextEncoder();
-  const response = await workers.call(worker, "canGetUpdates", id);
-  if (response != null) {
-    return Response.json(...response);
-  }
-  return new Response(
-    new ReadableStream(
-      {
-        async start(controller) {
-          try {
-            const updates = await workers.call(worker, "getUpdates", id, 0);
-            controller.enqueue(enc.encode(JSON.stringify(updates)));
-            controller.close();
-          } catch {
-            controller.error();
-          }
-        },
-        async cancel() {
-          await workers.call(worker, "abortGetUpdates", id);
-        },
-      },
-    ),
-  );
+async function handleGetUpdates(worker: number, id: string, timeout: number) {
+  const result = await workers.call(worker, "getUpdates", id, timeout);
+  return Response.json(...result);
 }
 
 async function handleInvoke(worker: number, id: string, function_: any) {

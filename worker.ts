@@ -84,14 +84,12 @@ const handlers = {
   serve,
   stats,
   getUpdates,
-  abortGetUpdates,
   invoke,
   setWebhook,
   deleteWebhook,
   startWebhookLoop,
   unload,
   dropPendingUpdates,
-  canGetUpdates,
 };
 export type Handler = typeof handlers;
 
@@ -203,15 +201,11 @@ async function stats(): Promise<WorkerStats> {
   };
 }
 
-function getUpdates(id: string, timeout: number): Promise<Update[] | "DROP"> {
+async function getUpdates(id: string, timeout: number): Promise<Parameters<typeof Response["json"]>> {
   if (timeout < 0) {
-    throw new Error(`Invalid timeout: ${timeout}`);
+    throw new InputError(`Invalid timeout: ${timeout}`);
   }
-  return clientManager.getUpdates(id, timeout);
-}
-
-async function abortGetUpdates(id: string) {
-  await clientManager.abortGetUpdates(id);
+  return [await clientManager.getUpdates(id, timeout)];
 }
 
 async function setWebhook(
@@ -243,10 +237,4 @@ async function dropPendingUpdates(
   await clientManager.dropPendingUpdates(id);
   return [null];
 }
-
-async function canGetUpdates(
-  id: string,
-): Promise<Parameters<typeof Response["json"]> | null> {
-  await clientManager.canGetUpdates(id);
-  return null;
-}
+ 

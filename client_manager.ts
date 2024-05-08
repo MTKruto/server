@@ -213,21 +213,8 @@ export class ClientManager {
 
   async getUpdates(id: string, timeoutSeconds: number) {
     const updates = await this.#getUpdatesInner(id, timeoutSeconds);
-    try {
-      return updates;
-    } finally {
-      this.#addToUpdateCleanupQueue(id, updates);
-    }
-  }
-
-  async canGetUpdates(id: string) {
-    const client = await this.getClient(id);
-    if (this.#webhooks.has(client)) {
-      throw new InputError("getUpdates is not allowed when a webhook is set.");
-    }
-    if (this.#polls.has(client)) {
-      throw new InputError("Another getUpdates is in progress.");
-    }
+    this.#addToUpdateCleanupQueue(id, updates);
+    return updates;
   }
 
   #polls = new Set<Client>();
@@ -235,12 +222,19 @@ export class ClientManager {
   #updateResolvers = new Map<Client, () => void>();
   #getUpdatesControllers = new Map<Client, AbortController>();
   async #getUpdatesInner(id: string, timeoutSeconds: number) {
-    const client = this.mustGetClient(id);
+    const client = await this.getClient(id);
     if (this.#webhooks.has(client)) {
-      unreachable();
+      throw new InputError("getUpdates is not allowed when a webhook is set.");
     }
-    if (this.#polls.has(client)) {
-      unreachable();
+
+    if (this.#polls.has(client)) { 
+    const controller = this.#getUpdatesControllers.get(client);
+    if (controller) {
+      controller.abort();
+    }
+    // just in case
+    this.#polls.delete(client);
+    this.#updateResolvers.delete(client);
     }
     this.#polls.add(client);
     let controller: AbortController | null = null;
@@ -266,6 +260,9 @@ export class ClientManager {
         }
         this.#updateResolvers.set(client, resolve);
       });
+      if (controller.signal.aborted) {
+        throw new InputError("Aborted by another getUpdates request.");
+      }
 
       updates = this.#updates.get(client);
       if (updates && updates.length) {
@@ -286,14 +283,6 @@ export class ClientManager {
       if (controller != null) {
         this.#getUpdatesControllers.delete(client);
       }
-    }
-  }
-
-  abortGetUpdates(id: string) {
-    const client = this.mustGetClient(id);
-    const controller = this.#getUpdatesControllers.get(client);
-    if (controller) {
-      controller.abort();
     }
   }
 
