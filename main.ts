@@ -128,7 +128,6 @@ async function handleRequest(id: string, method: string, params: any[]) {
   }
   switch (method) {
     case "getUpdates":
-      assertArgCount(params.length, 1);
       return await handleGetUpdates(worker, id, params[0]);
     case "invoke":
       assertArgCount(params.length, 1);
@@ -162,7 +161,7 @@ async function handleMethod(
 }
 
 async function handleGetUpdates(worker: number, id: string, timeout: number) {
-  const result = await workers.call(worker, "getUpdates", id, timeout);
+  const result = await workers.call(worker, "getUpdates", id, timeout || 0);
   return Response.json(...result);
 }
 
