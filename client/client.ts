@@ -22,7 +22,6 @@ import {
   AllowedMethod,
   BotCommand,
   BusinessConnection,
-  InlineQueryAnswer,
   CallbackQueryAnswer,
   Chat,
   ChatMember,
@@ -31,8 +30,10 @@ import {
   Composer,
   Context_,
   InactiveChat,
+  InlineQueryAnswer,
   InviteLink,
   iterateReadableStream,
+  LiveStreamChannel,
   Message,
   MessageAnimation,
   MessageAudio,
@@ -52,10 +53,14 @@ import {
   resolve,
   Sticker,
   Story,
+  transform,
   unimplemented,
   unreachable,
   Update,
   User,
+  VideoChat,
+  VideoChatActive,
+  VideoChatScheduled,
 } from "./deps.ts";
 import { Queue } from "./queue.ts";
 
@@ -701,7 +706,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
         : { "content-type": "application/json" },
       body,
     });
-    const result = await response.json();
+    const result = transform(await response.json());
     if (response.status == 200) {
       return result;
     } else {
@@ -1110,11 +1115,10 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= CALLBACK QUERIES ========================= //
   //
 
-
-   sendCallbackQuery(
+  sendCallbackQuery(
     ...args: Parameters<Client_["sendCallbackQuery"]>
   ): Promise<CallbackQueryAnswer> {
-   return  this.#request("sendCallbackQuery", args);
+    return this.#request("sendCallbackQuery", args);
   }
 
   async answerCallbackQuery(
@@ -1127,11 +1131,10 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= INLINE QUERIES ========================= //
   //
 
-
   sendInlineQuery(
     ...args: Parameters<Client_["sendInlineQuery"]>
   ): Promise<InlineQueryAnswer> {
-   return  this.#request("sendInlineQuery", args);
+    return this.#request("sendInlineQuery", args);
   }
 
   async answerInlineQuery(
@@ -1288,5 +1291,55 @@ export class Client<C extends Context = Context> extends Composer<C> {
     ...args: Parameters<Client_["unblockUser"]>
   ): Promise<void> {
     await this.#request("unblockUser", args);
+  }
+
+  //
+  // ========================= VIDEO CHATS ========================= //
+  //
+
+  downloadLiveStreamChunk(): never {
+    unimplemented();
+  }
+
+  getLiveStreamChannels(
+    ...args: Parameters<Client_["getLiveStreamChannels"]>
+  ): Promise<LiveStreamChannel[]> {
+    return this.#request("getLiveStreamChannels", args);
+  }
+
+  getVideoChat(
+    ...args: Parameters<Client_["getVideoChat"]>
+  ): Promise<VideoChat> {
+    return this.#request("getVideoChat", args);
+  }
+
+  async joinLiveStream(
+    ...args: Parameters<Client_["joinLiveStream"]>
+  ): Promise<void> {
+    await this.#request("joinLiveStream", args);
+  }
+
+  joinVideoChat(
+    ...args: Parameters<Client_["joinVideoChat"]>
+  ): Promise<string> {
+    return this.#request("joinVideoChat", args);
+  }
+
+  async leaveVideoChat(
+    ...args: Parameters<Client_["leaveVideoChat"]>
+  ): Promise<void> {
+    await this.#request("leaveVideoChat", args);
+  }
+
+  scheduleVideoChat(
+    ...args: Parameters<Client_["scheduleVideoChat"]>
+  ): Promise<VideoChatScheduled> {
+    return this.#request("scheduleVideoChat", args);
+  }
+
+  startVideoChat(
+    ...args: Parameters<Client_["startVideoChat"]>
+  ): Promise<VideoChatActive> {
+    return this.#request("startVideoChat", args);
   }
 }

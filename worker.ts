@@ -26,10 +26,11 @@ import { existsSync } from "std/fs/mod.ts";
 
 import { InputError } from "mtkruto/0_errors.ts";
 import { setLogVerbosity } from "mtkruto/1_utilities.ts";
-import { functions, setLoggingProvider, types, Update } from "mtkruto/mod.ts";
+import { functions, setLoggingProvider, types } from "mtkruto/mod.ts";
 
 import { serialize } from "./tl_json.ts";
 import { deserialize } from "./tl_json.ts";
+import { transform } from "./transform.ts";
 import { fileLogger } from "./file_logger.ts";
 import { isFunctionDisallowed } from "./disallowed_functions.ts";
 import { ClientManager, ClientStats } from "./client_manager.ts";
@@ -83,14 +84,12 @@ const handlers = {
   serve,
   stats,
   getUpdates,
-  abortGetUpdates,
   invoke,
   setWebhook,
   deleteWebhook,
   startWebhookLoop,
   unload,
   dropPendingUpdates,
-  canGetUpdates,
 };
 export type Handler = typeof handlers;
 
@@ -163,7 +162,7 @@ async function serve(
   const client = await clientManager.getClient(id);
   // deno-lint-ignore ban-ts-comment
   // @ts-ignore
-  const result = await client[method](...args);
+  const result = transform(await client[method](...args));
   if (result !== undefined) {
     return [result];
   } else {
@@ -202,15 +201,14 @@ async function stats(): Promise<WorkerStats> {
   };
 }
 
-function getUpdates(id: string, timeout: number): Promise<Update[] | "DROP"> {
+async function getUpdates(
+  id: string,
+  timeout: number,
+): Promise<Parameters<typeof Response["json"]>> {
   if (timeout < 0) {
-    throw new Error(`Invalid timeout: ${timeout}`);
+    throw new InputError(`Invalid timeout: ${timeout}`);
   }
-  return clientManager.getUpdates(id, timeout);
-}
-
-async function abortGetUpdates(id: string) {
-  await clientManager.abortGetUpdates(id);
+  return [await clientManager.getUpdates(id, timeout)];
 }
 
 async function setWebhook(
@@ -241,11 +239,4 @@ async function dropPendingUpdates(
 ): Promise<Parameters<typeof Response["json"]>> {
   await clientManager.dropPendingUpdates(id);
   return [null];
-}
-
-async function canGetUpdates(
-  id: string,
-): Promise<Parameters<typeof Response["json"]> | null> {
-  await clientManager.canGetUpdates(id);
-  return null;
 }

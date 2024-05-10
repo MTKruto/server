@@ -109,15 +109,13 @@ export class ClientManager {
         throw new InputError("Invalid client ID");
       }
       const kvPath = path.join(ClientManager.KV_PATH, id);
-      const client = new Client(
-        new StorageDenoKV(kvPath),
-        this.#apiId,
-        this.#apiHash,
-        {
-          dropPendingUpdates: false,
-          transportProvider: transportProviderTcp(),
-        },
-      );
+      const client = new Client({
+        storage: new StorageDenoKV(kvPath),
+        apiId: this.#apiId,
+        apiHash: this.#apiHash,
+        dropPendingUpdates: false,
+        transportProvider: transportProviderTcp(),
+      });
       let updates = this.#updates.get(client);
       if (!updates) {
         this.#updates.set(client, updates = []);
@@ -148,8 +146,8 @@ export class ClientManager {
         }
       });
       if (id.startsWith("bot")) {
-        const token = id.slice(3);
-        await client.start(token);
+        const botToken = id.slice(3);
+        await client.start({ botToken });
       } else {
         await client.start({
           phone: () => {
@@ -215,21 +213,8 @@ export class ClientManager {
 
   async getUpdates(id: string, timeoutSeconds: number) {
     const updates = await this.#getUpdatesInner(id, timeoutSeconds);
-    try {
-      return updates;
-    } finally {
-      this.#addToUpdateCleanupQueue(id, updates);
-    }
-  }
-
-  async canGetUpdates(id: string) {
-    const client = await this.getClient(id);
-    if (this.#webhooks.has(client)) {
-      throw new InputError("getUpdates is not allowed when a webhook is set.");
-    }
-    if (this.#polls.has(client)) {
-      throw new InputError("Another getUpdates is in progress.");
-    }
+    this.#addToUpdateCleanupQueue(id, updates);
+    return updates;
   }
 
   #polls = new Set<Client>();
@@ -237,12 +222,21 @@ export class ClientManager {
   #updateResolvers = new Map<Client, () => void>();
   #getUpdatesControllers = new Map<Client, AbortController>();
   async #getUpdatesInner(id: string, timeoutSeconds: number) {
-    const client = this.mustGetClient(id);
+    const client = await this.getClient(id);
     if (this.#webhooks.has(client)) {
-      unreachable();
+      throw new InputError("getUpdates is not allowed when a webhook is set.");
     }
+
     if (this.#polls.has(client)) {
-      unreachable();
+      const controller = this.#getUpdatesControllers.get(client);
+      if (controller) {
+        controller.abort();
+      }
+      this.#getUpdatesControllers.delete(client);
+      // just in case
+      this.#polls.delete(client);
+      this.#updateResolvers.get(client)?.();
+      this.#updateResolvers.delete(client);
     }
     this.#polls.add(client);
     let controller: AbortController | null = null;
@@ -268,6 +262,9 @@ export class ClientManager {
         }
         this.#updateResolvers.set(client, resolve);
       });
+      if (controller.signal.aborted) {
+        throw new InputError("Aborted by another getUpdates request.");
+      }
 
       updates = this.#updates.get(client);
       if (updates && updates.length) {
@@ -285,17 +282,12 @@ export class ClientManager {
       if (timeout != null) {
         clearTimeout(timeout);
       }
-      if (controller != null) {
+      if (
+        controller != null &&
+        this.#getUpdatesControllers.get(client) == controller
+      ) {
         this.#getUpdatesControllers.delete(client);
       }
-    }
-  }
-
-  abortGetUpdates(id: string) {
-    const client = this.mustGetClient(id);
-    const controller = this.#getUpdatesControllers.get(client);
-    if (controller) {
-      controller.abort();
     }
   }
 

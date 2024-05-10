@@ -18,27 +18,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as path from "std/path/mod.ts";
-import { promptSecret } from "std/cli/prompt_secret.ts";
+import { assertThrows } from "std/assert/mod.ts";
 
-import { Client } from "mtkruto/mod.ts";
-import { StorageDenoKV } from "mtkruto/storage/1_storage_deno_kv.ts";
+import { assertArgCount } from "../responses.ts";
 
-import { ClientManager } from "./client_manager.ts";
-
-export async function addUser(apiId: number, apiHash: string): Promise<never> {
-  const id = "user" + crypto.randomUUID();
-  ClientManager.createKvPath();
-  const storage = new StorageDenoKV(path.join(ClientManager.KV_PATH, id));
-  const client = new Client({ storage, apiId, apiHash });
-
-  await client.start({
-    phone: () => prompt("Phone number:")!,
-    code: () => prompt("Code:")!,
-    password: () => promptSecret("Password:")!,
+Deno.test("assertArgCount", () => {
+  assertArgCount(2, 2);
+  assertThrows(() => {
+    assertArgCount(1, 2);
   });
-
-  console.log("Endpoint path:", "/" + id);
-  await client.disconnect();
-  Deno.exit();
-}
+  assertThrows(() => {
+    assertArgCount(0, 1);
+  });
+  assertThrows(() => {
+    assertArgCount(1, 0);
+  });
+});
