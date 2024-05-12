@@ -33,12 +33,10 @@ export class DownloadManager {
         offset += size;
       }
     }
-    console.log({haveAllParts})
     let download: Download | undefined;
     if (!haveAllParts) {
       download = this.#startDownload(fileId, partsAvailable, offset);
     }
-    console.log({partsAvailable})
     for (let i = 0; i < partsAvailable; ++i) {
       const part = await Deno.readFile(path.join(dir, i + ""));
       offset += part.byteLength;
@@ -56,7 +54,6 @@ export class DownloadManager {
         } else if (download.haveAllParts) {
           break;
         }
-        console.log('waiting for partAvailable')
         await new Promise<void>((r) => {
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 5000);
@@ -94,7 +91,6 @@ class Download extends EventTarget {
     private offset: number,
   ) {
     super();
-    console.log({fileId, partsAvailable, offset})
   }
 
   async start() {

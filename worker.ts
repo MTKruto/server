@@ -28,10 +28,9 @@ import { InputError } from "mtkruto/0_errors.ts";
 import { setLogVerbosity } from "mtkruto/1_utilities.ts";
 import { functions, setLoggingProvider, types } from "mtkruto/mod.ts";
 
-import { serialize } from "./tl_json.ts";
-import { deserialize } from "./tl_json.ts";
 import { transform } from "./transform.ts";
 import { fileLogger } from "./file_logger.ts";
+import { deserialize, serialize } from "./tl_json.ts";
 import { isFunctionDisallowed } from "./disallowed_functions.ts";
 import { ClientManager, ClientStats } from "./client_manager.ts";
 import { ALLOWED_METHODS, AllowedMethod } from "./allowed_methods.ts";
