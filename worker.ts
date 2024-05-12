@@ -161,10 +161,15 @@ async function serve(
   if (!(ALLOWED_METHODS.includes(method))) {
     return "DROP";
   }
-  const client = await clientManager.getClient(id);
-  // deno-lint-ignore ban-ts-comment
-  // @ts-ignore
-  const result = transform(await client[method](...args));
+  let result;
+  if (method == "download") {
+    result = await clientManager.download(id, args[0]);
+  } else {
+    const client = await clientManager.getClient(id);
+    // deno-lint-ignore ban-ts-comment
+    // @ts-ignore
+    result = transform(await client[method](...args));
+  }
   if (result !== undefined) {
     if (
       typeof result === "object" && result != null &&

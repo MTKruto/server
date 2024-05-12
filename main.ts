@@ -175,7 +175,9 @@ async function handleMethod(
           if (chunk == null) {
             controller.close();
           } else {
-            controller.enqueue(chunk.value);
+            if (chunk.value) {
+              controller.enqueue(chunk.value);
+            }
             if (chunk.done) {
               controller.close();
             }

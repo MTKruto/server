@@ -36,6 +36,8 @@ import {
 import { StorageDenoKV } from "mtkruto/storage/1_storage_deno_kv.ts";
 import { transportProviderTcp } from "mtkruto/transport/3_transport_provider_tcp.ts";
 
+import { DownloadManager } from "./download_manager.ts";
+
 export interface ClientStats {
   connected: boolean;
   me: User;
@@ -85,6 +87,16 @@ export class ClientManager {
       }
       return false;
     };
+  }
+
+  #downloadManagers = new Map<Client, DownloadManager>();
+  async download(id: string, fileId: string) {
+    const client = await this.getClient(id);
+    let downloadManager = this.#downloadManagers.get(client);
+    if (!downloadManager) {
+      downloadManager = new DownloadManager(client);
+    }
+    return downloadManager.download(fileId);
   }
 
   async getClient(id: string) {
