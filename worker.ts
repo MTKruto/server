@@ -81,6 +81,7 @@ const handlers = {
   init,
   clientCount,
   serve,
+  next,
   stats,
   getUpdates,
   invoke,
@@ -151,7 +152,9 @@ async function serve(
   id: string,
   method: AllowedMethod,
   args: any[],
-): Promise<"DROP" | Parameters<typeof Response["json"]>> {
+): Promise<
+  "DROP" | Parameters<typeof Response["json"]> | { streamId: string }
+> {
   if (!id.trim() || !method.trim()) {
     return "DROP";
   }
@@ -163,9 +166,35 @@ async function serve(
   // @ts-ignore
   const result = transform(await client[method](...args));
   if (result !== undefined) {
-    return [result];
+    if (
+      typeof result === "object" && result != null &&
+      Symbol.asyncIterator in result
+    ) {
+      return { streamId: getStreamId(result) };
+    } else {
+      return [result];
+    }
   } else {
     return [null];
+  }
+}
+const streams = new Map<string, AsyncIterator<Uint8Array>>();
+function getStreamId(iterable: AsyncIterable<Uint8Array>) {
+  const id = crypto.randomUUID();
+  streams.set(id, iterable[Symbol.asyncIterator]());
+  return id;
+}
+
+async function next(streamId: string) {
+  const result = await streams.get(streamId)?.next();
+
+  if (result === undefined) {
+    return null;
+  } else {
+    if (result.done) {
+      streams.delete(streamId);
+    }
+    return result;
   }
 }
 

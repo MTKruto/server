@@ -155,8 +155,34 @@ async function handleMethod(
   const result = await workers.call(worker, "serve", id, method, params);
   if (result === "DROP") {
     return drop();
-  } else {
+  } else if (Array.isArray(result)) {
     return Response.json(...result);
+  } else {
+    const firstChunk = await workers.call(worker, "next", result.streamId);
+    if (firstChunk == null) {
+      return badRequest("Invalid stream ID");
+    }
+    return new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(firstChunk.value);
+          if (firstChunk.done) {
+            controller.close();
+          }
+        },
+        async pull(controller) {
+          const chunk = await workers.call(worker, "next", result.streamId);
+          if (chunk == null) {
+            controller.close();
+          } else {
+            controller.enqueue(chunk.value);
+            if (chunk.done) {
+              controller.close();
+            }
+          }
+        },
+      }),
+    );
   }
 }
 
