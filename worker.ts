@@ -28,10 +28,9 @@ import { InputError } from "mtkruto/0_errors.ts";
 import { setLogVerbosity } from "mtkruto/1_utilities.ts";
 import { functions, setLoggingProvider, types } from "mtkruto/mod.ts";
 
-import { serialize } from "./tl_json.ts";
-import { deserialize } from "./tl_json.ts";
 import { transform } from "./transform.ts";
 import { fileLogger } from "./file_logger.ts";
+import { deserialize, serialize } from "./tl_json.ts";
 import { isFunctionDisallowed } from "./disallowed_functions.ts";
 import { ClientManager, ClientStats } from "./client_manager.ts";
 import { ALLOWED_METHODS, AllowedMethod } from "./allowed_methods.ts";
@@ -82,6 +81,7 @@ const handlers = {
   init,
   clientCount,
   serve,
+  next,
   stats,
   getUpdates,
   invoke,
@@ -152,21 +152,54 @@ async function serve(
   id: string,
   method: AllowedMethod,
   args: any[],
-): Promise<"DROP" | Parameters<typeof Response["json"]>> {
+): Promise<
+  "DROP" | Parameters<typeof Response["json"]> | { streamId: string }
+> {
   if (!id.trim() || !method.trim()) {
     return "DROP";
   }
   if (!(ALLOWED_METHODS.includes(method))) {
     return "DROP";
   }
-  const client = await clientManager.getClient(id);
-  // deno-lint-ignore ban-ts-comment
-  // @ts-ignore
-  const result = transform(await client[method](...args));
+  let result;
+  if (method == "download") {
+    result = await clientManager.download(id, args[0]);
+  } else {
+    const client = await clientManager.getClient(id);
+    // deno-lint-ignore ban-ts-comment
+    // @ts-ignore
+    result = transform(await client[method](...args));
+  }
   if (result !== undefined) {
-    return [result];
+    if (
+      typeof result === "object" && result != null &&
+      Symbol.asyncIterator in result
+    ) {
+      return { streamId: getStreamId(result) };
+    } else {
+      return [result];
+    }
   } else {
     return [null];
+  }
+}
+const streams = new Map<string, AsyncIterator<Uint8Array>>();
+function getStreamId(iterable: AsyncIterable<Uint8Array>) {
+  const id = crypto.randomUUID();
+  streams.set(id, iterable[Symbol.asyncIterator]());
+  return id;
+}
+
+async function next(streamId: string) {
+  const result = await streams.get(streamId)?.next();
+
+  if (result === undefined) {
+    return null;
+  } else {
+    if (result.done) {
+      streams.delete(streamId);
+    }
+    return result;
   }
 }
 
