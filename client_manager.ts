@@ -23,11 +23,11 @@ import * as path from "std/path/mod.ts";
 import { existsSync } from "std/fs/exists.ts";
 import { unreachable } from "std/assert/unreachable.ts";
 
+import { InputError } from "mtkruto/0_errors.ts";
 import { Mutex, Queue } from "mtkruto/1_utilities.ts";
 import {
   Client,
   errors,
-  InputError,
   InvokeErrorHandler,
   NetworkStatistics,
   Update,

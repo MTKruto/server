@@ -18,6 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { decodeBase64, encodeBase64 } from "std/encoding/base64.ts";
+
 /**
  * Utility function to transform dates in objects into a JSON-(de)serializable format and vice-verca.
  */
@@ -27,14 +29,28 @@ export function transform(a: any) {
       if (a[key] != null && typeof a[key] === "object") {
         if (a[key] instanceof Date) {
           a[key] = { _: "date", value: a[key].toJSON() };
+        } else if (a[key] instanceof Uint8Array) {
+          a[key] = { _: "bytes", value: encodeBase64(a[key]) };
         } else if (
-          "_" in a[key] && a[key] == "date" && "value" in a[key] &&
+          "_" in a[key] && a[key]._ == "date" && "value" in a[key] &&
           typeof a[key].value === "string"
         ) {
           a[key] = new Date(a[key].value);
+        } else if (
+          "_" in a[key] && a[key]._ == "bigint" && "value" in a[key] &&
+          typeof a[key].value === "string"
+        ) {
+          a[key] = BigInt(a[key].value);
+        } else if (
+          "_" in a[key] && a[key]._ == "bytes" && "value" in a[key] &&
+          typeof a[key].value === "string"
+        ) {
+          a[key] = decodeBase64(a[key].value);
         } else {
           transform(a[key]);
         }
+      } else if (typeof a[key] === "bigint") {
+        a[key] = { _: "bigint", value: String(a[key]) };
       }
     }
   }

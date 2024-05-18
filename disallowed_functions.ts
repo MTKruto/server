@@ -18,7 +18,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { functions, name } from "mtkruto/mod.ts";
 import { isMtprotoFunction } from "mtkruto/client/0_utilities.ts";
 
 const DISALLOWED_FUNCTIONS = [
@@ -66,11 +65,11 @@ const DISALLOWED_FUNCTIONS = [
 ];
 
 export function isFunctionDisallowed(function_: any) {
-  if (function_ instanceof functions.ping) {
+  if (function_._ == "ping") {
     return false;
   }
 
-  if (DISALLOWED_FUNCTIONS.includes(function_[name])) {
+  if (DISALLOWED_FUNCTIONS.includes(function_._)) {
     return true;
   }
 

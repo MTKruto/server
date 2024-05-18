@@ -26,11 +26,10 @@ import { existsSync } from "std/fs/mod.ts";
 
 import { InputError } from "mtkruto/0_errors.ts";
 import { setLogVerbosity } from "mtkruto/1_utilities.ts";
-import { functions, setLoggingProvider, types } from "mtkruto/mod.ts";
+import { errors, isValidType, setLoggingProvider } from "mtkruto/mod.ts";
 
 import { transform } from "./transform.ts";
 import { fileLogger } from "./file_logger.ts";
-import { deserialize, serialize } from "./tl_json.ts";
 import { isFunctionDisallowed } from "./disallowed_functions.ts";
 import { ClientManager, ClientStats } from "./client_manager.ts";
 import { ALLOWED_METHODS, AllowedMethod } from "./allowed_methods.ts";
@@ -60,9 +59,9 @@ addEventListener("message", async (e) => {
         status: 400,
         headers: { "x-error-type": "input" },
       }];
-    } else if (err instanceof types.Rpc_error) {
-      result = [err.error_message, {
-        status: err.error_code,
+    } else if (err instanceof errors.TelegramError) {
+      result = [err.errorMessage, {
+        status: err.errorCode,
         headers: { "x-error-type": "rpc" },
       }];
     } else {
@@ -207,15 +206,15 @@ async function invoke(
   id: string,
   function_: any,
 ): Promise<Parameters<typeof Response["json"]>> {
-  const function__ = deserialize(function_);
-  if (!(function__ instanceof functions.Function)) {
-    throw new InputError("Expected a function");
+  function_ = transform(function_);
+  if (!isValidType(function_)) {
+    throw new InputError("Invalid function");
   }
-  if (isFunctionDisallowed(function__)) {
+  if (isFunctionDisallowed(function_)) {
     throw new InputError("Unallowed function");
   }
   const client = await clientManager.getClient(id);
-  const result = serialize(await client.invoke(function__));
+  const result = transform(await client.invoke(function_));
   if (result !== undefined) {
     return [result];
   } else {

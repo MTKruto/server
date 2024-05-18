@@ -24,6 +24,12 @@ import { transform } from "../transform.ts";
 
 Deno.test("transform", () => {
   const date = new Date();
-  const a = { _: { _: { _: date, a: [date, date] } } };
+  const bigint = 123123n;
+  const buffer = crypto.getRandomValues(new Uint8Array(1024));
+  const a = {
+    _: {
+      _: { _: date, a: [buffer, date, date], bigint, c: bigint, x: buffer },
+    },
+  };
   assertEquals(transform(transform(a)), a);
 });
