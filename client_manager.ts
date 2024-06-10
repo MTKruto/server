@@ -23,11 +23,11 @@ import * as path from "std/path/mod.ts";
 import { existsSync } from "std/fs/exists.ts";
 import { unreachable } from "std/assert/unreachable.ts";
 
+import { InputError } from "mtkruto/0_errors.ts";
 import { Mutex, Queue } from "mtkruto/1_utilities.ts";
 import {
   Client,
   errors,
-  InputError,
   InvokeErrorHandler,
   NetworkStatistics,
   Update,
@@ -35,6 +35,8 @@ import {
 } from "mtkruto/mod.ts";
 import { StorageDenoKV } from "mtkruto/storage/1_storage_deno_kv.ts";
 import { transportProviderTcp } from "mtkruto/transport/3_transport_provider_tcp.ts";
+
+import { DownloadManager } from "./download_manager.ts";
 
 export interface ClientStats {
   connected: boolean;
@@ -85,6 +87,16 @@ export class ClientManager {
       }
       return false;
     };
+  }
+
+  #downloadManagers = new Map<Client, DownloadManager>();
+  async download(id: string, fileId: string) {
+    const client = await this.getClient(id);
+    let downloadManager = this.#downloadManagers.get(client);
+    if (!downloadManager) {
+      downloadManager = new DownloadManager(client);
+    }
+    return downloadManager.download(fileId);
   }
 
   async getClient(id: string) {
@@ -226,17 +238,12 @@ export class ClientManager {
     if (this.#webhooks.has(client)) {
       throw new InputError("getUpdates is not allowed when a webhook is set.");
     }
-
-    if (this.#polls.has(client)) {
+    {
       const controller = this.#getUpdatesControllers.get(client);
       if (controller) {
         controller.abort();
       }
       this.#getUpdatesControllers.delete(client);
-      // just in case
-      this.#polls.delete(client);
-      this.#updateResolvers.get(client)?.();
-      this.#updateResolvers.delete(client);
     }
     this.#polls.add(client);
     let controller: AbortController | null = null;
@@ -276,7 +283,6 @@ export class ClientManager {
         return [];
       }
     } finally {
-      this.#updateResolvers.delete(client);
       this.#polls.delete(client);
       this.#lastGetUpdates.set(client, new Date());
       if (timeout != null) {

@@ -26,10 +26,8 @@ import { existsSync } from "std/fs/mod.ts";
 
 import { InputError } from "mtkruto/0_errors.ts";
 import { setLogVerbosity } from "mtkruto/1_utilities.ts";
-import { functions, setLoggingProvider, types } from "mtkruto/mod.ts";
+import { errors, isValidType, setLoggingProvider } from "mtkruto/mod.ts";
 
-import { serialize } from "./tl_json.ts";
-import { deserialize } from "./tl_json.ts";
 import { transform } from "./transform.ts";
 import { fileLogger } from "./file_logger.ts";
 import { isFunctionDisallowed } from "./disallowed_functions.ts";
@@ -61,9 +59,9 @@ addEventListener("message", async (e) => {
         status: 400,
         headers: { "x-error-type": "input" },
       }];
-    } else if (err instanceof types.Rpc_error) {
-      result = [err.error_message, {
-        status: err.error_code,
+    } else if (err instanceof errors.TelegramError) {
+      result = [err.errorMessage, {
+        status: err.errorCode,
         headers: { "x-error-type": "rpc" },
       }];
     } else {
@@ -82,6 +80,7 @@ const handlers = {
   init,
   clientCount,
   serve,
+  next,
   stats,
   getUpdates,
   invoke,
@@ -152,21 +151,54 @@ async function serve(
   id: string,
   method: AllowedMethod,
   args: any[],
-): Promise<"DROP" | Parameters<typeof Response["json"]>> {
+): Promise<
+  "DROP" | Parameters<typeof Response["json"]> | { streamId: string }
+> {
   if (!id.trim() || !method.trim()) {
     return "DROP";
   }
   if (!(ALLOWED_METHODS.includes(method))) {
     return "DROP";
   }
-  const client = await clientManager.getClient(id);
-  // deno-lint-ignore ban-ts-comment
-  // @ts-ignore
-  const result = transform(await client[method](...args));
+  let result;
+  if (method == "download") {
+    result = await clientManager.download(id, args[0]);
+  } else {
+    const client = await clientManager.getClient(id);
+    // deno-lint-ignore ban-ts-comment
+    // @ts-ignore
+    result = transform(await client[method](...args));
+  }
   if (result !== undefined) {
-    return [result];
+    if (
+      typeof result === "object" && result != null &&
+      Symbol.asyncIterator in result
+    ) {
+      return { streamId: getStreamId(result) };
+    } else {
+      return [result];
+    }
   } else {
     return [null];
+  }
+}
+const streams = new Map<string, AsyncIterator<Uint8Array>>();
+function getStreamId(iterable: AsyncIterable<Uint8Array>) {
+  const id = crypto.randomUUID();
+  streams.set(id, iterable[Symbol.asyncIterator]());
+  return id;
+}
+
+async function next(streamId: string) {
+  const result = await streams.get(streamId)?.next();
+
+  if (result === undefined) {
+    return null;
+  } else {
+    if (result.done) {
+      streams.delete(streamId);
+    }
+    return result;
   }
 }
 
@@ -174,15 +206,15 @@ async function invoke(
   id: string,
   function_: any,
 ): Promise<Parameters<typeof Response["json"]>> {
-  const function__ = deserialize(function_);
-  if (!(function__ instanceof functions.Function)) {
-    throw new InputError("Expected a function");
+  function_ = transform(function_);
+  if (!isValidType(function_)) {
+    throw new InputError("Invalid function");
   }
-  if (isFunctionDisallowed(function__)) {
+  if (isFunctionDisallowed(function_)) {
     throw new InputError("Unallowed function");
   }
   const client = await clientManager.getClient(id);
-  const result = serialize(await client.invoke(function__));
+  const result = transform(await client.invoke(function_));
   if (result !== undefined) {
     return [result];
   } else {

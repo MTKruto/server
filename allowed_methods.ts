@@ -107,6 +107,7 @@ export const ALLOWED_METHODS = [
   "removeStoryFromHighlights",
   "blockUser",
   "unblockUser",
+  "download",
   "downloadLiveStreamChunk",
   "getLiveStreamChannels",
   "getVideoChat",
