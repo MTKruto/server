@@ -39,6 +39,7 @@ export const ALLOWED_METHODS = [
   "sendDice",
   "sendVenue",
   "sendPoll",
+  "sendInvoice",
   "editMessageText",
   "editInlineMessageText",
   "editMessageMedia",

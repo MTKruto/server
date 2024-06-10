@@ -40,6 +40,7 @@ import {
   MessageContact,
   MessageDice,
   MessageDocument,
+  MessageInvoice,
   MessageLocation,
   MessagePhoto,
   MessagePoll,
@@ -847,6 +848,12 @@ export class Client<C extends Context = Context> extends Composer<C> {
 
   sendPoll(...args: Parameters<Client_["sendPoll"]>): Promise<MessagePoll> {
     return this.#request("sendPoll", args);
+  }
+
+  sendInvoicе(
+    ...args: Parameters<Client_["sendInvoice"]>
+  ): Promise<MessageInvoice> {
+    return this.#request("sendInvoice", args);
   }
 
   editMessageText(

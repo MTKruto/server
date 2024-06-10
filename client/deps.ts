@@ -39,6 +39,7 @@ export type {
   MessageContact,
   MessageDice,
   MessageDocument,
+  MessageInvoice,
   MessageLocation,
   MessagePhoto,
   MessagePoll,
@@ -56,10 +57,10 @@ export type {
   VideoChat,
   VideoChatActive,
   VideoChatScheduled,
-} from "https://deno.land/x/mtkruto@0.1.708/mod.ts";
-export { cleanObject } from "https://deno.land/x/mtkruto@0.1.708/utilities/0_object.ts";
-export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.1.708/utilities/1_misc.ts";
-export { Composer } from "https://deno.land/x/mtkruto@0.1.708/client/1_composer.ts";
-export { resolve } from "https://deno.land/x/mtkruto@0.1.708/client/0_utilities.ts";
+} from "https://deno.land/x/mtkruto@0.2.11/mod.ts";
+export { cleanObject } from "https://deno.land/x/mtkruto@0.2.11/utilities/0_object.ts";
+export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.2.11/utilities/1_misc.ts";
+export { Composer } from "https://deno.land/x/mtkruto@0.2.11/client/1_composer.ts";
+export { resolve } from "https://deno.land/x/mtkruto@0.2.11/client/0_utilities.ts";
 export type { AllowedMethod } from "../allowed_methods.ts";
 export { transform } from "../transform.ts";
