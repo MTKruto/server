@@ -117,6 +117,8 @@ export const ALLOWED_METHODS = [
   "leaveVideoChat",
   "scheduleVideoChat",
   "startVideoChat",
+  "answerPreCheckoutQuery",
+  "refundStarPayment",
 ] as const;
 
 export type AllowedMethod = (typeof ALLOWED_METHODS)[number];

@@ -1349,4 +1349,22 @@ export class Client<C extends Context = Context> extends Composer<C> {
   ): Promise<VideoChatActive> {
     return this.#request("startVideoChat", args);
   }
+
+
+  //
+  // ========================= PAYMENTS ========================= //
+  //
+
+
+  async answerPreCheckoutQuery(
+    ...args: Parameters<Client_["answerPreCheckoutQuery"]>
+  ): Promise<void> {
+    await this.#request("answerPreCheckoutQuery", args);
+  }
+  
+  async refundStarPayment(
+    ...args: Parameters<Client_["refundStarPayment"]>
+  ): Promise<void> {
+    await this.#request("refundStarPayment", args);
+  }
 }
