@@ -21,6 +21,7 @@
   - [Webhooks](#webhooks)
 - [Client Libraries](#client-libraries)
   - [JavaScript](#javascript)
+  - [Python](#python)
 - [Contributing](#contributing)
 - [Support](#support)
 - [Legal](#legal)
@@ -346,6 +347,10 @@ implementation that resides in [client/](./client/) can be taken as a reference.
 This is a client implementation that is maintained as part of the project.
 
 <https://github.com/MTKruto/server/tree/main/client/>
+
+### Python
+
+<https://github.com/MTKruto/python>
 
 ## Contributing
 
