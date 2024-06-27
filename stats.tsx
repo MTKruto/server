@@ -193,7 +193,8 @@ function Stats({ children: workers }: { children: WorkerStats[] }) {
       SPECIAL PATHS
       <NewLine />
       <Indent>
-        /write-logs
+        /write-logs{"\n"}
+        /clear-cache
       </Indent>
       <BlankLine />
       <BlankLine />

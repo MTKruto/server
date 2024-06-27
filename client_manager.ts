@@ -500,4 +500,19 @@ export class ClientManager {
     }
     this.#updates.set(client, []);
   }
+
+  async clearCache() {
+    for (const client of this.#clients.values()) {
+      try {
+        await client.storage.clear();
+      } catch (_err) {
+        await client.storage.initialize();
+        try {
+          await client.storage.clear();
+        } catch (_err) {
+          //
+        }
+      }
+    }
+  }
 }

@@ -89,6 +89,7 @@ const handlers = {
   startWebhookLoop,
   unload,
   dropPendingUpdates,
+  clearCache,
 };
 export type Handler = typeof handlers;
 
@@ -270,5 +271,10 @@ async function dropPendingUpdates(
   id: string,
 ): Promise<Parameters<typeof Response["json"]>> {
   await clientManager.dropPendingUpdates(id);
+  return [null];
+}
+
+async function clearCache(): Promise<Parameters<typeof Response["json"]>> {
+  await clientManager.clearCache();
   return [null];
 }

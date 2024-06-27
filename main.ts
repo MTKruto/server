@@ -229,6 +229,11 @@ Deno.serve({
     case "/write-logs":
       await workers.unload();
       return Response.json("Logs were written.");
+    case "/clear-cache":
+      for (let i = 0; i < workers.count(); ++i) {
+        await workers.call(i, "clearCache");
+      }
+      return Response.json("Caches were cleared.");
     default:
       return notFound();
   }
