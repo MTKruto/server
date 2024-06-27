@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { decodeBase64, encodeBase64 } from "std/encoding/base64.ts";
+import { decodeBase64, encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts"; // DIRECT
 
 /**
  * Utility function to transform dates in objects into a JSON-(de)serializable format and vice-verca.
