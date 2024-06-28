@@ -57,10 +57,10 @@ export type {
   VideoChat,
   VideoChatActive,
   VideoChatScheduled,
-} from "https://deno.land/x/mtkruto@0.2.20/mod.ts";
-export { cleanObject } from "https://deno.land/x/mtkruto@0.2.20/utilities/0_object.ts";
-export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.2.20/utilities/1_misc.ts";
-export { Composer } from "https://deno.land/x/mtkruto@0.2.20/client/1_composer.ts";
-export { resolve } from "https://deno.land/x/mtkruto@0.2.20/client/0_utilities.ts";
+} from "https://deno.land/x/mtkruto@0.2.21/mod.ts";
+export { cleanObject } from "https://deno.land/x/mtkruto@0.2.21/utilities/0_object.ts";
+export { iterateReadableStream } from "https://deno.land/x/mtkruto@0.2.21/utilities/1_misc.ts";
+export { Composer } from "https://deno.land/x/mtkruto@0.2.21/client/1_composer.ts";
+export { resolve } from "https://deno.land/x/mtkruto@0.2.21/client/0_utilities.ts";
 export type { AllowedMethod } from "../allowed_methods.ts";
 export { transform } from "../transform.ts";

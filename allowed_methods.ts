@@ -119,6 +119,10 @@ export const ALLOWED_METHODS = [
   "startVideoChat",
   "answerPreCheckoutQuery",
   "refundStarPayment",
+  "approveJoinRequest",
+  "approveJoinRequests",
+  "declineJoinRequest",
+  "declineJoinRequests",
 ] as const;
 
 export type AllowedMethod = (typeof ALLOWED_METHODS)[number];
