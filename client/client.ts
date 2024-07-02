@@ -29,6 +29,7 @@ import {
   Client_,
   Composer,
   Context_,
+  FailedInvitation,
   InactiveChat,
   InlineQueryAnswer,
   InviteLink,
@@ -161,6 +162,10 @@ export class Client<C extends Context = Context> extends Composer<C> {
       ? update.messageReactions.chat
       : "messageReactionCount" in update
       ? update.messageReactionCount.chat
+      : "chatMember" in update
+      ? update.chatMember.chat
+      : "joinRequest" in update
+      ? update.joinRequest.chat
       : undefined;
     const chat = chat_ ?? msg?.chat;
     const from = "callbackQuery" in update
@@ -171,6 +176,14 @@ export class Client<C extends Context = Context> extends Composer<C> {
       ? update.message.from
       : "editedMessage" in update
       ? update.editedMessage?.from
+      : "chatMember" in update
+      ? update.chatMember.from
+      : "messageReactions" in update
+      ? update.messageReactions.user
+      : "preCheckoutQuery" in update
+      ? update.preCheckoutQuery.from
+      : "joinRequest" in update
+      ? update.joinRequest.user
       : undefined;
     const senderChat = msg?.senderChat;
     const getReplyToMessageId = (
@@ -604,6 +617,16 @@ export class Client<C extends Context = Context> extends Composer<C> {
           unreachable();
         }
         return this.getBusinessConnection(businessConnectionId);
+      },
+      answerPreCheckoutQuery: (ok, params) => {
+        if (!("preCheckoutQuery" in update)) {
+          unreachable();
+        }
+        return this.answerPreCheckoutQuery(
+          update.preCheckoutQuery.id,
+          ok,
+          params,
+        );
       },
     };
 
@@ -1132,6 +1155,42 @@ export class Client<C extends Context = Context> extends Composer<C> {
     ...args: Parameters<Client_["answerCallbackQuery"]>
   ): Promise<void> {
     await this.#request("answerCallbackQuery", args);
+  }
+
+  async approveJoinRequest(
+    ...args: Parameters<Client_["approveJoinRequest"]>
+  ): Promise<void> {
+    await this.#request("approveJoinRequest", args);
+  }
+
+  async approveJoinRequests(
+    ...args: Parameters<Client_["approveJoinRequests"]>
+  ): Promise<void> {
+    await this.#request("approveJoinRequests", args);
+  }
+
+  async declineJoinRequest(
+    ...args: Parameters<Client_["declineJoinRequest"]>
+  ): Promise<void> {
+    await this.#request("declineJoinRequest", args);
+  }
+
+  async declineJoinRequests(
+    ...args: Parameters<Client_["declineJoinRequests"]>
+  ): Promise<void> {
+    await this.#request("declineJoinRequests", args);
+  }
+
+  addChatMember(
+    ...args: Parameters<Client_["addChatMember"]>
+  ): Promise<FailedInvitation[]> {
+    return this.#request("addChatMember", args);
+  }
+
+  addChatMembers(
+    ...args: Parameters<Client_["addChatMembers"]>
+  ): Promise<FailedInvitation[]> {
+    return this.#request("addChatMembers", args);
   }
 
   //

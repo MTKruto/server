@@ -123,6 +123,9 @@ export const ALLOWED_METHODS = [
   "approveJoinRequests",
   "declineJoinRequest",
   "declineJoinRequests",
+  "addChatMember",
+  "addChatMembers",
+  "sendMediaGroup",
 ] as const;
 
 export type AllowedMethod = (typeof ALLOWED_METHODS)[number];
