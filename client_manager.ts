@@ -25,14 +25,7 @@ import { unreachable } from "std/assert/unreachable.ts";
 
 import { InputError } from "mtkruto/0_errors.ts";
 import { Mutex, Queue } from "mtkruto/1_utilities.ts";
-import {
-  Client,
-  errors,
-  InvokeErrorHandler,
-  NetworkStatistics,
-  Update,
-  User,
-} from "mtkruto/mod.ts";
+import { Client, errors, InvokeErrorHandler, NetworkStatistics, Update, User } from "mtkruto/mod.ts";
 import { StorageDenoKV } from "mtkruto/storage/1_storage_deno_kv.ts";
 import { transportProviderTcp } from "mtkruto/transport/3_transport_provider_tcp.ts";
 
@@ -338,29 +331,19 @@ export class ClientManager {
 
   static #getUpdateId(update: Update) {
     if ("deletedMessages" in update) {
-      return `D-${
-        update.businessConnectionId ?? "0"
-      }${Date.now()}-${crypto.randomUUID()}`;
+      return `D-${update.businessConnectionId ?? "0"}${Date.now()}-${crypto.randomUUID()}`;
     } else if ("message" in update) {
       const { message } = update;
-      return `M-${
-        message.businessConnectionId ?? "0"
-      }-${message.chat.id}-${message.id}`;
+      return `M-${message.businessConnectionId ?? "0"}-${message.chat.id}-${message.id}`;
     } else if ("editedMessage" in update) {
       const { editedMessage } = update;
-      return `N-${
-        editedMessage.businessConnectionId ?? "0"
-      }-${editedMessage.chat.id}-${editedMessage.id}-${
-        editedMessage.editDate?.getTime() ?? 0
-      }`;
+      return `N-${editedMessage.businessConnectionId ?? "0"}-${editedMessage.chat.id}-${editedMessage.id}-${editedMessage.editDate?.getTime() ?? 0}`;
     } else if ("messageReactionCount" in update) {
       const { messageReactionCount } = update;
       return `RC-${messageReactionCount.chat.id}-${messageReactionCount.messageId}-${messageReactionCount.date.getTime()}`;
     } else if ("messageReactions" in update) {
       const { messageReactions } = update;
-      return `R-${messageReactions.chat.id}-${messageReactions.chat.id}-${
-        messageReactions.user?.id ?? messageReactions.actorChat?.id ?? 0
-      }-${messageReactions.date.getTime()}`;
+      return `R-${messageReactions.chat.id}-${messageReactions.chat.id}-${messageReactions.user?.id ?? messageReactions.actorChat?.id ?? 0}-${messageReactions.date.getTime()}`;
     } else if ("chatMember" in update) {
       const { chatMember } = update;
       return `CM-${chatMember.chat.id}-${chatMember.from.id}-${chatMember.date.getTime()}`;
@@ -472,9 +455,7 @@ export class ClientManager {
           });
         } catch (err) {
           log.error(
-            `[${id}]\nFailed to dispatch ${updatesToDispatch.length} update${
-              updatesToDispatch.length == 1 ? "" : "s"
-            } to webhook at ${url}.`,
+            `[${id}]\nFailed to dispatch ${updatesToDispatch.length} update${updatesToDispatch.length == 1 ? "" : "s"} to webhook at ${url}.`,
             Deno.inspect(err, { colors: false }),
           );
         }

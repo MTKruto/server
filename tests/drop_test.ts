@@ -18,11 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  assertInstanceOf,
-  assertStringIncludes,
-  fail,
-} from "std/assert/mod.ts";
+import { assertInstanceOf, assertStringIncludes, fail } from "std/assert/mod.ts";
 
 async function assertDrops(promise: Promise<Response>) {
   try {

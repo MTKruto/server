@@ -38,9 +38,7 @@ export function fileLogger(filename: string): LoggingProvider {
   function write() {
     for (const entry of entries) {
       const text = enc.encode(
-        entry.map((v) =>
-          typeof v === "string" ? v : Deno.inspect(v, { colors: false })
-        ).join(" ") + "\n",
+        entry.map((v) => typeof v === "string" ? v : Deno.inspect(v, { colors: false })).join(" ") + "\n",
       );
       writeAllSync(file, text);
     }

@@ -18,52 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  AllowedMethod,
-  BotCommand,
-  BusinessConnection,
-  CallbackQueryAnswer,
-  Chat,
-  ChatMember,
-  cleanObject,
-  Client_,
-  Composer,
-  Context_,
-  FailedInvitation,
-  InactiveChat,
-  InlineQueryAnswer,
-  InviteLink,
-  iterateReadableStream,
-  LiveStreamChannel,
-  Message,
-  MessageAnimation,
-  MessageAudio,
-  MessageContact,
-  MessageDice,
-  MessageDocument,
-  MessageInvoice,
-  MessageLocation,
-  MessagePhoto,
-  MessagePoll,
-  MessageSticker,
-  MessageText,
-  MessageVenue,
-  MessageVideo,
-  MessageVideoNote,
-  MessageVoice,
-  Poll,
-  resolve,
-  Sticker,
-  Story,
-  transform,
-  unimplemented,
-  unreachable,
-  Update,
-  User,
-  VideoChat,
-  VideoChatActive,
-  VideoChatScheduled,
-} from "./deps.ts";
+import { AllowedMethod, BotCommand, BusinessConnection, CallbackQueryAnswer, Chat, ChatMember, cleanObject, Client_, Composer, Context_, FailedInvitation, InactiveChat, InlineQueryAnswer, InviteLink, iterateReadableStream, LiveStreamChannel, Message, MessageAnimation, MessageAudio, MessageContact, MessageDice, MessageDocument, MessageInvoice, MessageLocation, MessagePhoto, MessagePoll, MessageSticker, MessageText, MessageVenue, MessageVideo, MessageVideoNote, MessageVoice, Poll, ReplyTo, resolve, Sticker, Story, transform, unimplemented, unreachable, Update, User, VideoChat, VideoChatActive, VideoChatScheduled } from "./deps.ts";
 import { Queue } from "./queue.ts";
 
 export interface Context extends Omit<Context_, "client"> {
@@ -111,24 +66,11 @@ export class Client<C extends Context = Context> extends Composer<C> {
   }
 
   #constructContext = async (update: Update) => {
-    const msg = "message" in update
-      ? update.message
-      : "editedMessage" in update
-      ? update.editedMessage
-      : "callbackQuery" in update
-      ? update.callbackQuery.message
-      : undefined;
-    const reactions = "messageInteractions" in update
-      ? update.messageInteractions
-      : undefined;
+    const msg = "message" in update ? update.message : "editedMessage" in update ? update.editedMessage : "callbackQuery" in update ? update.callbackQuery.message : undefined;
+    const reactions = "messageInteractions" in update ? update.messageInteractions : undefined;
     const mustGetMsg = () => {
       if (msg !== undefined) {
-        return {
-          chatId: msg.chat.id,
-          messageId: msg.id,
-          businessConnectionId: msg.businessConnectionId,
-          senderId: (msg.from ?? msg.senderChat)?.id,
-        };
+        return { chatId: msg.chat.id, messageId: msg.id, businessConnectionId: msg.businessConnectionId, senderId: (msg.from ?? msg.senderChat)?.id, userId: msg.from?.id };
       } else if (reactions !== undefined) {
         return { chatId: reactions.chatId, messageId: reactions.messageId };
       } else {
@@ -158,43 +100,17 @@ export class Client<C extends Context = Context> extends Composer<C> {
       }
       unreachable();
     };
-    const chat_ = "messageReactions" in update
-      ? update.messageReactions.chat
-      : "messageReactionCount" in update
-      ? update.messageReactionCount.chat
-      : "chatMember" in update
-      ? update.chatMember.chat
-      : "joinRequest" in update
-      ? update.joinRequest.chat
-      : undefined;
+    const chat_ = "messageReactions" in update ? update.messageReactions.chat : "messageReactionCount" in update ? update.messageReactionCount.chat : "chatMember" in update ? update.chatMember.chat : "joinRequest" in update ? update.joinRequest.chat : undefined;
     const chat = chat_ ?? msg?.chat;
-    const from = "callbackQuery" in update
-      ? update.callbackQuery.from
-      : "inlineQuery" in update
-      ? update.inlineQuery.from
-      : "message" in update
-      ? update.message.from
-      : "editedMessage" in update
-      ? update.editedMessage?.from
-      : "chatMember" in update
-      ? update.chatMember.from
-      : "messageReactions" in update
-      ? update.messageReactions.user
-      : "preCheckoutQuery" in update
-      ? update.preCheckoutQuery.from
-      : "joinRequest" in update
-      ? update.joinRequest.user
-      : undefined;
+    const from = "callbackQuery" in update ? update.callbackQuery.from : "inlineQuery" in update ? update.inlineQuery.from : "message" in update ? update.message.from : "editedMessage" in update ? update.editedMessage?.from : "chatMember" in update ? update.chatMember.from : "messageReactions" in update ? update.messageReactions.user : "preCheckoutQuery" in update ? update.preCheckoutQuery.from : "joinRequest" in update ? update.joinRequest.user : undefined;
     const senderChat = msg?.senderChat;
-    const getReplyToMessageId = (
-      quote: boolean | undefined,
-      chatId: number,
-      messageId: number,
-    ) => {
+    const getReplyTo = (quote: boolean | undefined, chatId: number, messageId: number): ReplyTo | undefined => {
+      if ("story" in update) {
+        return { chatId: update.story.chat.id, storyId: update.story.id };
+      }
       const isPrivate = chatId > 0;
       const shouldQuote = quote === undefined ? !isPrivate : quote;
-      const replyToMessageId = shouldQuote ? messageId : undefined;
-      return replyToMessageId;
+      return shouldQuote ? { messageId } : undefined;
     };
     const me = await this.#getMe();
 
@@ -209,188 +125,86 @@ export class Client<C extends Context = Context> extends Composer<C> {
       get toJSON() {
         return () => update;
       },
+
       reply: (text, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendMessage(chatId, text, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
-      },
-      replyPhoto: (photo, params) => {
-        const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendPhoto(chatId, photo, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
-      },
-      replyDocument: (document, params) => {
-        const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendDocument(chatId, document, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
-      },
-      replySticker: (sticker, params) => {
-        const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendSticker(chatId, sticker, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendMessage(chatId, text, { ...params, replyTo, businessConnectionId });
       },
       replyPoll: (question, options, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendPoll(chatId, question, options, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendPoll(chatId, question, options, { ...params, replyTo, businessConnectionId });
+      },
+      replyPhoto: (photo, params) => {
+        const { chatId, messageId, businessConnectionId } = mustGetMsg();
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendPhoto(chatId, photo, { ...params, replyTo, businessConnectionId });
+      },
+      replyMediaGroup: (media, params) => {
+        const { chatId, messageId, businessConnectionId } = mustGetMsg();
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendMediaGroup(chatId, media, { ...params, replyTo, businessConnectionId });
+      },
+      replyInvoice: (title, description, payload, currency, prices, params) => {
+        const { chatId, messageId, businessConnectionId } = mustGetMsg();
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendInvoice(chatId, title, description, payload, currency, prices, { ...params, replyTo, businessConnectionId });
+      },
+      replyDocument: (document, params) => {
+        const { chatId, messageId, businessConnectionId } = mustGetMsg();
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendDocument(chatId, document, { ...params, replyTo, businessConnectionId });
+      },
+      replySticker: (sticker, params) => {
+        const { chatId, messageId, businessConnectionId } = mustGetMsg();
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendSticker(chatId, sticker, { ...params, replyTo, businessConnectionId });
       },
       replyContact: (firstName, number, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendContact(chatId, firstName, number, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendContact(chatId, firstName, number, { ...params, replyTo, businessConnectionId });
       },
       replyLocation: (latitude, longitude, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendLocation(chatId, latitude, longitude, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendLocation(chatId, latitude, longitude, { ...params, replyTo, businessConnectionId });
       },
       replyDice: (params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendDice(chatId, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendDice(chatId, { ...params, replyTo, businessConnectionId });
       },
       replyVenue: (latitude, longitude, title, address, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendVenue(chatId, latitude, longitude, title, address, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendVenue(chatId, latitude, longitude, title, address, { ...params, replyTo, businessConnectionId });
       },
-
       replyVideo: (video, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendVideo(chatId, video, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendVideo(chatId, video, { ...params, replyTo, businessConnectionId });
       },
       replyAnimation: (document, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendAnimation(chatId, document, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendAnimation(chatId, document, { ...params, replyTo, businessConnectionId });
       },
       replyVoice: (document, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendVoice(chatId, document, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendVoice(chatId, document, { ...params, replyTo, businessConnectionId });
       },
       replyAudio: (document, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendAudio(chatId, document, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendAudio(chatId, document, { ...params, replyTo, businessConnectionId });
       },
       replyVideoNote: (videoNote, params) => {
         const { chatId, messageId, businessConnectionId } = mustGetMsg();
-        const replyToMessageId = getReplyToMessageId(
-          params?.quote,
-          chatId,
-          messageId,
-        );
-        return this.sendVideoNote(chatId, videoNote, {
-          ...params,
-          replyToMessageId,
-          businessConnectionId,
-        });
+        const replyTo = getReplyTo(params?.quote, chatId, messageId);
+        return this.sendVideoNote(chatId, videoNote, { ...params, replyTo, businessConnectionId });
       },
       delete: () => {
         const { chatId, messageId } = mustGetMsg();
@@ -398,12 +212,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
       },
       forward: (to, params) => {
         const { chatId, messageId } = mustGetMsg();
-        return this.forwardMessage(
-          chatId,
-          to,
-          messageId,
-          params,
-        ) as unknown as ReturnType<C["forward"]>;
+        return this.forwardMessage(chatId, to, messageId, params) as unknown as ReturnType<C["forward"]>;
       },
       pin: (params) => {
         const { chatId, messageId } = mustGetMsg();
@@ -464,12 +273,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
       },
       editInlineMessageLiveLocation: (latitude, longitude, params) => {
         const inlineMessageId = mustGetInlineMsgId();
-        return this.editInlineMessageLiveLocation(
-          inlineMessageId,
-          latitude,
-          longitude,
-          params,
-        );
+        return this.editInlineMessageLiveLocation(inlineMessageId, latitude, longitude, params);
       },
       editInlineMessageReplyMarkup: (params) => {
         const inlineMessageId = mustGetInlineMsgId();
@@ -481,13 +285,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
       },
       editMessageLiveLocation: (messageId, latitude, longitude, params) => {
         const { chatId } = mustGetMsg();
-        return this.editMessageLiveLocation(
-          chatId,
-          messageId,
-          latitude,
-          longitude,
-          params,
-        );
+        return this.editMessageLiveLocation(chatId, messageId, latitude, longitude, params);
       },
       editMessageReplyMarkup: (messageId, params) => {
         const { chatId } = mustGetMsg();
@@ -622,11 +420,21 @@ export class Client<C extends Context = Context> extends Composer<C> {
         if (!("preCheckoutQuery" in update)) {
           unreachable();
         }
-        return this.answerPreCheckoutQuery(
-          update.preCheckoutQuery.id,
-          ok,
-          params,
-        );
+        return this.answerPreCheckoutQuery(update.preCheckoutQuery.id, ok, params);
+      },
+      approveJoinRequest: () => {
+        const { chatId, userId } = mustGetMsg();
+        if (!userId) {
+          unreachable();
+        }
+        return this.approveJoinRequest(chatId, userId);
+      },
+      declineJoinRequest: () => {
+        const { chatId, userId } = mustGetMsg();
+        if (!userId) {
+          unreachable();
+        }
+        return this.declineJoinRequest(chatId, userId);
       },
     };
 
@@ -725,9 +533,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
     const url = new URL(method, this.#endpoint);
     const response = await fetch(url, {
       method: "POST",
-      headers: useMultipart
-        ? undefined
-        : { "content-type": "application/json" },
+      headers: useMultipart ? undefined : { "content-type": "application/json" },
       body,
     });
     const result = transform(await response.json());
@@ -773,21 +579,15 @@ export class Client<C extends Context = Context> extends Composer<C> {
     await this.#request("hideUsername", args);
   }
 
-  reorderUsernames(
-    ...args: Parameters<Client_["reorderUsernames"]>
-  ): Promise<boolean> {
+  reorderUsernames(...args: Parameters<Client_["reorderUsernames"]>): Promise<boolean> {
     return this.#request("reorderUsernames", args);
   }
 
-  hideUsernames(
-    ...args: Parameters<Client_["hideUsernames"]>
-  ): Promise<boolean> {
+  hideUsernames(...args: Parameters<Client_["hideUsernames"]>): Promise<boolean> {
     return this.#request("hideUsernames", args);
   }
 
-  getBusinessConnection(
-    ...args: Parameters<Client_["getBusinessConnection"]>
-  ): Promise<BusinessConnection> {
+  getBusinessConnection(...args: Parameters<Client_["getBusinessConnection"]>): Promise<BusinessConnection> {
     return this.#request("getBusinessConnection", args);
   }
 
@@ -795,69 +595,51 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= MESSAGES ========================= //
   //
 
-  sendMessage(
-    ...args: Parameters<Client_["sendMessage"]>
-  ): Promise<MessageText> {
+  sendMessage(...args: Parameters<Client_["sendMessage"]>): Promise<MessageText> {
     return this.#request("sendMessage", args);
   }
 
-  sendPhoto(
-    ...args: Parameters<Client_["sendPhoto"]>
-  ): Promise<MessagePhoto> {
+  sendPhoto(...args: Parameters<Client_["sendPhoto"]>): Promise<MessagePhoto> {
     return this.#request("sendPhoto", args);
   }
 
-  sendDocument(
-    ...args: Parameters<Client_["sendDocument"]>
-  ): Promise<MessageDocument> {
+  sendDocument(...args: Parameters<Client_["sendDocument"]>): Promise<MessageDocument> {
     return this.#request("sendDocument", args);
   }
 
-  sendSticker(
-    ...args: Parameters<Client_["sendSticker"]>
-  ): Promise<MessageSticker> {
+  sendSticker(...args: Parameters<Client_["sendSticker"]>): Promise<MessageSticker> {
     return this.#request("sendSticker", args);
   }
 
-  sendVideo(
-    ...args: Parameters<Client_["sendVideo"]>
-  ): Promise<MessageVideo> {
+  sendVideo(...args: Parameters<Client_["sendVideo"]>): Promise<MessageVideo> {
     return this.#request("sendVideo", args);
   }
 
-  sendAnimation(
-    ...args: Parameters<Client_["sendAnimation"]>
-  ): Promise<MessageAnimation> {
+  sendAnimation(...args: Parameters<Client_["sendAnimation"]>): Promise<MessageAnimation> {
     return this.#request("sendAnimation", args);
   }
 
-  sendVoice(
-    ...args: Parameters<Client_["sendVoice"]>
-  ): Promise<MessageVoice> {
+  sendVoice(...args: Parameters<Client_["sendVoice"]>): Promise<MessageVoice> {
     return this.#request("sendVoice", args);
   }
 
-  sendAudio(
-    ...args: Parameters<Client_["sendAudio"]>
-  ): Promise<MessageAudio> {
+  sendAudio(...args: Parameters<Client_["sendAudio"]>): Promise<MessageAudio> {
     return this.#request("sendAudio", args);
   }
 
-  sendVideoNote(
-    ...args: Parameters<Client_["sendVideoNote"]>
-  ): Promise<MessageVideoNote> {
+  sendMediaGroup(...args: Parameters<Client_["sendMediaGroup"]>): Promise<Message[]> {
+    return this.#request("sendMediaGroup", args);
+  }
+
+  sendVideoNote(...args: Parameters<Client_["sendVideoNote"]>): Promise<MessageVideoNote> {
     return this.#request("sendVideoNote", args);
   }
 
-  sendLocation(
-    ...args: Parameters<Client_["sendLocation"]>
-  ): Promise<MessageLocation> {
+  sendLocation(...args: Parameters<Client_["sendLocation"]>): Promise<MessageLocation> {
     return this.#request("sendLocation", args);
   }
 
-  sendContact(
-    ...args: Parameters<Client_["sendContact"]>
-  ): Promise<MessageContact> {
+  sendContact(...args: Parameters<Client_["sendContact"]>): Promise<MessageContact> {
     return this.#request("sendContact", args);
   }
 
@@ -873,123 +655,87 @@ export class Client<C extends Context = Context> extends Composer<C> {
     return this.#request("sendPoll", args);
   }
 
-  sendInvoicе(
-    ...args: Parameters<Client_["sendInvoice"]>
-  ): Promise<MessageInvoice> {
+  sendInvoice(...args: Parameters<Client_["sendInvoice"]>): Promise<MessageInvoice> {
     return this.#request("sendInvoice", args);
   }
 
-  editMessageText(
-    ...args: Parameters<Client_["editMessageText"]>
-  ): Promise<MessageText> {
+  sendInvoicе(...args: Parameters<Client_["sendInvoice"]>): Promise<MessageInvoice> {
+    return this.#request("sendInvoice", args);
+  }
+
+  editMessageText(...args: Parameters<Client_["editMessageText"]>): Promise<MessageText> {
     return this.#request("editMessageText", args);
   }
 
-  async editInlineMessageText(
-    ...args: Parameters<Client_["editInlineMessageText"]>
-  ): Promise<void> {
+  async editInlineMessageText(...args: Parameters<Client_["editInlineMessageText"]>): Promise<void> {
     await this.#request("editInlineMessageText", args);
   }
 
-  editMessageReplyMarkup(
-    ...args: Parameters<Client_["editMessageReplyMarkup"]>
-  ): Promise<Message> {
+  editMessageReplyMarkup(...args: Parameters<Client_["editMessageReplyMarkup"]>): Promise<Message> {
     return this.#request("editMessageReplyMarkup", args);
   }
 
-  async editInlineMessageReplyMarkup(
-    ...args: Parameters<Client_["editInlineMessageReplyMarkup"]>
-  ): Promise<void> {
+  async editInlineMessageReplyMarkup(...args: Parameters<Client_["editInlineMessageReplyMarkup"]>): Promise<void> {
     await this.#request("editInlineMessageReplyMarkup", args);
   }
 
-  editMessageLiveLocation(
-    ...args: Parameters<Client_["editMessageLiveLocation"]>
-  ): Promise<MessageLocation> {
+  editMessageLiveLocation(...args: Parameters<Client_["editMessageLiveLocation"]>): Promise<MessageLocation> {
     return this.#request("editMessageLiveLocation", args);
   }
 
-  async editInlineMessageLiveLocation(
-    ...args: Parameters<Client_["editInlineMessageLiveLocation"]>
-  ): Promise<void> {
+  async editInlineMessageLiveLocation(...args: Parameters<Client_["editInlineMessageLiveLocation"]>): Promise<void> {
     await this.#request("editInlineMessageLiveLocation", args);
   }
 
-  getMessages(
-    ...args: Parameters<Client_["getMessages"]>
-  ): Promise<Message[]> {
+  getMessages(...args: Parameters<Client_["getMessages"]>): Promise<Message[]> {
     return this.#request("getMessages", args);
   }
 
-  getMessage(
-    ...args: Parameters<Client_["getMessage"]>
-  ): Promise<Message | null> {
+  getMessage(...args: Parameters<Client_["getMessage"]>): Promise<Message | null> {
     return this.#request("getMessage", args);
   }
 
-  async deleteMessages(
-    ...args: Parameters<Client_["deleteMessages"]>
-  ): Promise<void> {
+  async deleteMessages(...args: Parameters<Client_["deleteMessages"]>): Promise<void> {
     await this.#request("deleteMessages", args);
   }
 
-  async deleteMessage(
-    ...args: Parameters<Client_["deleteMessage"]>
-  ): Promise<void> {
+  async deleteMessage(...args: Parameters<Client_["deleteMessage"]>): Promise<void> {
     await this.#request("deleteMessage", args);
   }
 
-  async deleteChatMemberMessages(
-    ...args: Parameters<Client_["deleteChatMemberMessages"]>
-  ): Promise<void> {
+  async deleteChatMemberMessages(...args: Parameters<Client_["deleteChatMemberMessages"]>): Promise<void> {
     await this.#request("deleteChatMemberMessages", args);
   }
 
-  async pinMessage(
-    ...args: Parameters<Client_["pinMessage"]>
-  ): Promise<void> {
+  async pinMessage(...args: Parameters<Client_["pinMessage"]>): Promise<void> {
     await this.#request("pinMessage", args);
   }
 
-  async unpinMessages(
-    ...args: Parameters<Client_["unpinMessages"]>
-  ): Promise<void> {
+  async unpinMessages(...args: Parameters<Client_["unpinMessages"]>): Promise<void> {
     await this.#request("unpinMessages", args);
   }
 
-  async unpinMessage(
-    ...args: Parameters<Client_["unpinMessage"]>
-  ): Promise<void> {
+  async unpinMessage(...args: Parameters<Client_["unpinMessage"]>): Promise<void> {
     await this.#request("unpinMessage", args);
   }
 
-  forwardMessages(
-    ...args: Parameters<Client_["forwardMessages"]>
-  ): Promise<Message[]> {
+  forwardMessages(...args: Parameters<Client_["forwardMessages"]>): Promise<Message[]> {
     return this.#request("forwardMessages", args);
   }
 
-  forwardMessage(
-    ...args: Parameters<Client_["forwardMessage"]>
-  ): Promise<Message> {
+  forwardMessage(...args: Parameters<Client_["forwardMessage"]>): Promise<Message> {
     return this.#request("forwardMessage", args);
   }
 
-  stopPoll(
-    ...args: Parameters<Client_["stopPoll"]>
-  ): Promise<Poll> {
+  stopPoll(...args: Parameters<Client_["stopPoll"]>): Promise<Poll> {
     return this.#request("stopPoll", args);
   }
 
-  async sendChatAction(
-    ...args: Parameters<Client_["sendChatAction"]>
-  ): Promise<void> {
+  async sendChatAction(...args: Parameters<Client_["sendChatAction"]>): Promise<void> {
     await this.#request("sendChatAction", args);
   }
 
-  searchMessages(
-    ...args: Parameters<Client_["searchMessages"]>
-  ): Promise<Message[]> {
+  searchMessages(...args: Parameters<Client_["searchMessages"]>): Promise<Message[]> {
     return this.#request("searchMessages", args);
   }
 
@@ -1001,9 +747,7 @@ export class Client<C extends Context = Context> extends Composer<C> {
     unimplemented();
   }
 
-  getCustomEmojiStickers(
-    ...args: Parameters<Client_["getCustomEmojiStickers"]>
-  ): Promise<Sticker[]> {
+  getCustomEmojiStickers(...args: Parameters<Client_["getCustomEmojiStickers"]>): Promise<Sticker[]> {
     return this.#request("getCustomEmojiStickers", args);
   }
 
@@ -1015,129 +759,87 @@ export class Client<C extends Context = Context> extends Composer<C> {
     unimplemented();
   }
 
-  getChat(
-    ...args: Parameters<Client_["getChat"]>
-  ): Promise<Chat> {
+  getChat(...args: Parameters<Client_["getChat"]>): Promise<Chat> {
     return this.#request("getChat", args);
   }
 
-  getHistory(
-    ...args: Parameters<Client_["getHistory"]>
-  ): Promise<Message[]> {
+  getHistory(...args: Parameters<Client_["getHistory"]>): Promise<Message[]> {
     return this.#request("getHistory", args);
   }
 
-  async setAvailableReactions(
-    ...args: Parameters<Client_["setAvailableReactions"]>
-  ): Promise<void> {
+  async setAvailableReactions(...args: Parameters<Client_["setAvailableReactions"]>): Promise<void> {
     await this.#request("setAvailableReactions", args);
   }
 
-  async setChatPhoto(
-    ...args: Parameters<Client_["setChatPhoto"]>
-  ): Promise<void> {
+  async setChatPhoto(...args: Parameters<Client_["setChatPhoto"]>): Promise<void> {
     await this.#request("setChatPhoto", args);
   }
 
-  async deleteChatPhoto(
-    ...args: Parameters<Client_["deleteChatPhoto"]>
-  ): Promise<void> {
+  async deleteChatPhoto(...args: Parameters<Client_["deleteChatPhoto"]>): Promise<void> {
     await this.#request("deleteChatPhoto", args);
   }
 
-  async banChatMember(
-    ...args: Parameters<Client_["banChatMember"]>
-  ): Promise<void> {
+  async banChatMember(...args: Parameters<Client_["banChatMember"]>): Promise<void> {
     await this.#request("banChatMember", args);
   }
 
-  async unbanChatMember(
-    ...args: Parameters<Client_["unbanChatMember"]>
-  ): Promise<void> {
+  async unbanChatMember(...args: Parameters<Client_["unbanChatMember"]>): Promise<void> {
     await this.#request("unbanChatMember", args);
   }
 
-  async kickChatMember(
-    ...args: Parameters<Client_["kickChatMember"]>
-  ): Promise<void> {
+  async kickChatMember(...args: Parameters<Client_["kickChatMember"]>): Promise<void> {
     await this.#request("kickChatMember", args);
   }
 
-  async setChatMemberRights(
-    ...args: Parameters<Client_["setChatMemberRights"]>
-  ): Promise<void> {
+  async setChatMemberRights(...args: Parameters<Client_["setChatMemberRights"]>): Promise<void> {
     await this.#request("setChatMemberRights", args);
   }
 
-  getChatAdministrators(
-    ...args: Parameters<Client_["getChatAdministrators"]>
-  ): Promise<ChatMember[]> {
+  getChatAdministrators(...args: Parameters<Client_["getChatAdministrators"]>): Promise<ChatMember[]> {
     return this.#request("getChatAdministrators", args);
   }
 
-  async enableJoinRequests(
-    ...args: Parameters<Client_["enableJoinRequests"]>
-  ): Promise<void> {
+  async enableJoinRequests(...args: Parameters<Client_["enableJoinRequests"]>): Promise<void> {
     await this.#request("enableJoinRequests", args);
   }
 
-  async disableJoinRequests(
-    ...args: Parameters<Client_["disableJoinRequests"]>
-  ): Promise<void> {
+  async disableJoinRequests(...args: Parameters<Client_["disableJoinRequests"]>): Promise<void> {
     await this.#request("disableJoinRequests", args);
   }
 
-  getInactiveChats(
-    ...args: Parameters<Client_["getInactiveChats"]>
-  ): Promise<InactiveChat[]> {
+  getInactiveChats(...args: Parameters<Client_["getInactiveChats"]>): Promise<InactiveChat[]> {
     return this.#request("getInactiveChats", args);
   }
 
-  getCreatedInviteLinks(
-    ...args: Parameters<Client_["getCreatedInviteLinks"]>
-  ): Promise<InviteLink[]> {
+  getCreatedInviteLinks(...args: Parameters<Client_["getCreatedInviteLinks"]>): Promise<InviteLink[]> {
     return this.#request("getCreatedInviteLinks", args);
   }
 
-  async joinChat(
-    ...args: Parameters<Client_["joinChat"]>
-  ): Promise<void> {
+  async joinChat(...args: Parameters<Client_["joinChat"]>): Promise<void> {
     await this.#request("joinChat", args);
   }
 
-  async leaveChat(
-    ...args: Parameters<Client_["leaveChat"]>
-  ): Promise<void> {
+  async leaveChat(...args: Parameters<Client_["leaveChat"]>): Promise<void> {
     await this.#request("leaveChat", args);
   }
 
-  getChatMember(
-    ...args: Parameters<Client_["getChatMember"]>
-  ): Promise<ChatMember> {
+  getChatMember(...args: Parameters<Client_["getChatMember"]>): Promise<ChatMember> {
     return this.#request("getChatMember", args);
   }
 
-  async setChatStickerSet(
-    ...args: Parameters<Client_["setChatStickerSet"]>
-  ): Promise<void> {
+  async setChatStickerSet(...args: Parameters<Client_["setChatStickerSet"]>): Promise<void> {
     await this.#request("setChatStickerSet", args);
   }
 
-  async deleteChatStickerSet(
-    ...args: Parameters<Client_["deleteChatStickerSet"]>
-  ): Promise<void> {
+  async deleteChatStickerSet(...args: Parameters<Client_["deleteChatStickerSet"]>): Promise<void> {
     await this.#request("deleteChatStickerSet", args);
   }
 
-  async setBoostsRequiredToCircumventRestrictions(
-    ...args: Parameters<Client_["setBoostsRequiredToCircumventRestrictions"]>
-  ): Promise<void> {
+  async setBoostsRequiredToCircumventRestrictions(...args: Parameters<Client_["setBoostsRequiredToCircumventRestrictions"]>): Promise<void> {
     await this.#request("setBoostsRequiredToCircumventRestrictions", args);
   }
 
-  createInviteLink(
-    ...args: Parameters<Client_["createInviteLink"]>
-  ): Promise<InviteLink> {
+  createInviteLink(...args: Parameters<Client_["createInviteLink"]>): Promise<InviteLink> {
     return this.#request("createInviteLink", args);
   }
 
@@ -1145,51 +847,35 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= CALLBACK QUERIES ========================= //
   //
 
-  sendCallbackQuery(
-    ...args: Parameters<Client_["sendCallbackQuery"]>
-  ): Promise<CallbackQueryAnswer> {
+  sendCallbackQuery(...args: Parameters<Client_["sendCallbackQuery"]>): Promise<CallbackQueryAnswer> {
     return this.#request("sendCallbackQuery", args);
   }
 
-  async answerCallbackQuery(
-    ...args: Parameters<Client_["answerCallbackQuery"]>
-  ): Promise<void> {
+  async answerCallbackQuery(...args: Parameters<Client_["answerCallbackQuery"]>): Promise<void> {
     await this.#request("answerCallbackQuery", args);
   }
 
-  async approveJoinRequest(
-    ...args: Parameters<Client_["approveJoinRequest"]>
-  ): Promise<void> {
+  async approveJoinRequest(...args: Parameters<Client_["approveJoinRequest"]>): Promise<void> {
     await this.#request("approveJoinRequest", args);
   }
 
-  async approveJoinRequests(
-    ...args: Parameters<Client_["approveJoinRequests"]>
-  ): Promise<void> {
+  async approveJoinRequests(...args: Parameters<Client_["approveJoinRequests"]>): Promise<void> {
     await this.#request("approveJoinRequests", args);
   }
 
-  async declineJoinRequest(
-    ...args: Parameters<Client_["declineJoinRequest"]>
-  ): Promise<void> {
+  async declineJoinRequest(...args: Parameters<Client_["declineJoinRequest"]>): Promise<void> {
     await this.#request("declineJoinRequest", args);
   }
 
-  async declineJoinRequests(
-    ...args: Parameters<Client_["declineJoinRequests"]>
-  ): Promise<void> {
+  async declineJoinRequests(...args: Parameters<Client_["declineJoinRequests"]>): Promise<void> {
     await this.#request("declineJoinRequests", args);
   }
 
-  addChatMember(
-    ...args: Parameters<Client_["addChatMember"]>
-  ): Promise<FailedInvitation[]> {
+  addChatMember(...args: Parameters<Client_["addChatMember"]>): Promise<FailedInvitation[]> {
     return this.#request("addChatMember", args);
   }
 
-  addChatMembers(
-    ...args: Parameters<Client_["addChatMembers"]>
-  ): Promise<FailedInvitation[]> {
+  addChatMembers(...args: Parameters<Client_["addChatMembers"]>): Promise<FailedInvitation[]> {
     return this.#request("addChatMembers", args);
   }
 
@@ -1197,15 +883,11 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= INLINE QUERIES ========================= //
   //
 
-  sendInlineQuery(
-    ...args: Parameters<Client_["sendInlineQuery"]>
-  ): Promise<InlineQueryAnswer> {
+  sendInlineQuery(...args: Parameters<Client_["sendInlineQuery"]>): Promise<InlineQueryAnswer> {
     return this.#request("sendInlineQuery", args);
   }
 
-  async answerInlineQuery(
-    ...args: Parameters<Client_["answerInlineQuery"]>
-  ): Promise<void> {
+  async answerInlineQuery(...args: Parameters<Client_["answerInlineQuery"]>): Promise<void> {
     await this.#request("answerInlineQuery", args);
   }
 
@@ -1213,51 +895,35 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= BOTS ========================= //
   //
 
-  async setMyDescription(
-    ...args: Parameters<Client_["setMyDescription"]>
-  ): Promise<void> {
+  async setMyDescription(...args: Parameters<Client_["setMyDescription"]>): Promise<void> {
     await this.#request("setMyDescription", args);
   }
 
-  async setMyName(
-    ...args: Parameters<Client_["setMyName"]>
-  ): Promise<void> {
+  async setMyName(...args: Parameters<Client_["setMyName"]>): Promise<void> {
     await this.#request("setMyName", args);
   }
 
-  async setMyShortDescription(
-    ...args: Parameters<Client_["setMyShortDescription"]>
-  ): Promise<void> {
+  async setMyShortDescription(...args: Parameters<Client_["setMyShortDescription"]>): Promise<void> {
     await this.#request("setMyShortDescription", args);
   }
 
-  async setMyCommands(
-    ...args: Parameters<Client_["setMyCommands"]>
-  ): Promise<void> {
+  async setMyCommands(...args: Parameters<Client_["setMyCommands"]>): Promise<void> {
     await this.#request("setMyCommands", args);
   }
 
-  getMyDescription(
-    ...args: Parameters<Client_["getMyDescription"]>
-  ): Promise<string> {
+  getMyDescription(...args: Parameters<Client_["getMyDescription"]>): Promise<string> {
     return this.#request("getMyDescription", args);
   }
 
-  getMyName(
-    ...args: Parameters<Client_["getMyName"]>
-  ): Promise<string> {
+  getMyName(...args: Parameters<Client_["getMyName"]>): Promise<string> {
     return this.#request("getMyName", args);
   }
 
-  getMyShortDescription(
-    ...args: Parameters<Client_["getMyShortDescription"]>
-  ): Promise<string> {
+  getMyShortDescription(...args: Parameters<Client_["getMyShortDescription"]>): Promise<string> {
     return this.#request("getMyShortDescription", args);
   }
 
-  getMyCommands(
-    ...args: Parameters<Client_["getMyCommands"]>
-  ): Promise<BotCommand[]> {
+  getMyCommands(...args: Parameters<Client_["getMyCommands"]>): Promise<BotCommand[]> {
     return this.#request("getMyCommands", args);
   }
 
@@ -1265,21 +931,15 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= REACTIONS ========================= //
   //
 
-  async setReactions(
-    ...args: Parameters<Client_["setReactions"]>
-  ): Promise<void> {
+  async setReactions(...args: Parameters<Client_["setReactions"]>): Promise<void> {
     await this.#request("setReactions", args);
   }
 
-  async addReaction(
-    ...args: Parameters<Client_["addReaction"]>
-  ): Promise<void> {
+  async addReaction(...args: Parameters<Client_["addReaction"]>): Promise<void> {
     await this.#request("addReaction", args);
   }
 
-  async removeReaction(
-    ...args: Parameters<Client_["removeReaction"]>
-  ): Promise<void> {
+  async removeReaction(...args: Parameters<Client_["removeReaction"]>): Promise<void> {
     await this.#request("removeReaction", args);
   }
 
@@ -1291,51 +951,35 @@ export class Client<C extends Context = Context> extends Composer<C> {
     unimplemented();
   }
 
-  getStories(
-    ...args: Parameters<Client_["getStories"]>
-  ): Promise<Story[]> {
+  getStories(...args: Parameters<Client_["getStories"]>): Promise<Story[]> {
     return this.#request("getStories", args);
   }
 
-  getStory(
-    ...args: Parameters<Client_["getStory"]>
-  ): Promise<Story | null> {
+  getStory(...args: Parameters<Client_["getStory"]>): Promise<Story | null> {
     return this.#request("getStory", args);
   }
 
-  async deleteStories(
-    ...args: Parameters<Client_["deleteStories"]>
-  ): Promise<void> {
+  async deleteStories(...args: Parameters<Client_["deleteStories"]>): Promise<void> {
     await this.#request("deleteStories", args);
   }
 
-  async deleteStory(
-    ...args: Parameters<Client_["deleteStory"]>
-  ): Promise<void> {
+  async deleteStory(...args: Parameters<Client_["deleteStory"]>): Promise<void> {
     await this.#request("deleteStory", args);
   }
 
-  async addStoriesToHighlights(
-    ...args: Parameters<Client_["addStoriesToHighlights"]>
-  ): Promise<void> {
+  async addStoriesToHighlights(...args: Parameters<Client_["addStoriesToHighlights"]>): Promise<void> {
     await this.#request("addStoriesToHighlights", args);
   }
 
-  async addStoryToHighlights(
-    ...args: Parameters<Client_["addStoryToHighlights"]>
-  ): Promise<void> {
+  async addStoryToHighlights(...args: Parameters<Client_["addStoryToHighlights"]>): Promise<void> {
     await this.#request("addStoryToHighlights", args);
   }
 
-  async removeStoriesFromHighlights(
-    ...args: Parameters<Client_["removeStoriesFromHighlights"]>
-  ): Promise<void> {
+  async removeStoriesFromHighlights(...args: Parameters<Client_["removeStoriesFromHighlights"]>): Promise<void> {
     await this.#request("removeStoriesFromHighlights", args);
   }
 
-  async removeStoryFromHighlights(
-    ...args: Parameters<Client_["removeStoryFromHighlights"]>
-  ): Promise<void> {
+  async removeStoryFromHighlights(...args: Parameters<Client_["removeStoryFromHighlights"]>): Promise<void> {
     await this.#request("removeStoryFromHighlights", args);
   }
 
@@ -1347,15 +991,11 @@ export class Client<C extends Context = Context> extends Composer<C> {
     unimplemented();
   }
 
-  async blockUser(
-    ...args: Parameters<Client_["blockUser"]>
-  ): Promise<void> {
+  async blockUser(...args: Parameters<Client_["blockUser"]>): Promise<void> {
     await this.#request("blockUser", args);
   }
 
-  async unblockUser(
-    ...args: Parameters<Client_["unblockUser"]>
-  ): Promise<void> {
+  async unblockUser(...args: Parameters<Client_["unblockUser"]>): Promise<void> {
     await this.#request("unblockUser", args);
   }
 
@@ -1367,45 +1007,31 @@ export class Client<C extends Context = Context> extends Composer<C> {
     unimplemented();
   }
 
-  getLiveStreamChannels(
-    ...args: Parameters<Client_["getLiveStreamChannels"]>
-  ): Promise<LiveStreamChannel[]> {
+  getLiveStreamChannels(...args: Parameters<Client_["getLiveStreamChannels"]>): Promise<LiveStreamChannel[]> {
     return this.#request("getLiveStreamChannels", args);
   }
 
-  getVideoChat(
-    ...args: Parameters<Client_["getVideoChat"]>
-  ): Promise<VideoChat> {
+  getVideoChat(...args: Parameters<Client_["getVideoChat"]>): Promise<VideoChat> {
     return this.#request("getVideoChat", args);
   }
 
-  async joinLiveStream(
-    ...args: Parameters<Client_["joinLiveStream"]>
-  ): Promise<void> {
+  async joinLiveStream(...args: Parameters<Client_["joinLiveStream"]>): Promise<void> {
     await this.#request("joinLiveStream", args);
   }
 
-  joinVideoChat(
-    ...args: Parameters<Client_["joinVideoChat"]>
-  ): Promise<string> {
+  joinVideoChat(...args: Parameters<Client_["joinVideoChat"]>): Promise<string> {
     return this.#request("joinVideoChat", args);
   }
 
-  async leaveVideoChat(
-    ...args: Parameters<Client_["leaveVideoChat"]>
-  ): Promise<void> {
+  async leaveVideoChat(...args: Parameters<Client_["leaveVideoChat"]>): Promise<void> {
     await this.#request("leaveVideoChat", args);
   }
 
-  scheduleVideoChat(
-    ...args: Parameters<Client_["scheduleVideoChat"]>
-  ): Promise<VideoChatScheduled> {
+  scheduleVideoChat(...args: Parameters<Client_["scheduleVideoChat"]>): Promise<VideoChatScheduled> {
     return this.#request("scheduleVideoChat", args);
   }
 
-  startVideoChat(
-    ...args: Parameters<Client_["startVideoChat"]>
-  ): Promise<VideoChatActive> {
+  startVideoChat(...args: Parameters<Client_["startVideoChat"]>): Promise<VideoChatActive> {
     return this.#request("startVideoChat", args);
   }
 
@@ -1413,15 +1039,11 @@ export class Client<C extends Context = Context> extends Composer<C> {
   // ========================= PAYMENTS ========================= //
   //
 
-  async answerPreCheckoutQuery(
-    ...args: Parameters<Client_["answerPreCheckoutQuery"]>
-  ): Promise<void> {
+  async answerPreCheckoutQuery(...args: Parameters<Client_["answerPreCheckoutQuery"]>): Promise<void> {
     await this.#request("answerPreCheckoutQuery", args);
   }
 
-  async refundStarPayment(
-    ...args: Parameters<Client_["refundStarPayment"]>
-  ): Promise<void> {
+  async refundStarPayment(...args: Parameters<Client_["refundStarPayment"]>): Promise<void> {
     await this.#request("refundStarPayment", args);
   }
 }

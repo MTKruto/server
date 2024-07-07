@@ -102,9 +102,7 @@ function Indent({ children }: { children?: ComponentChildren }) {
   const v = renderToString(<>{children}</>);
   return (
     <>
-      {v.split("\n").map((v) => `    ${v}`).map((v) =>
-        v.trim().length == 0 ? "" : v
-      ).join("\n")}
+      {v.split("\n").map((v) => `    ${v}`).map((v) => v.trim().length == 0 ? "" : v).join("\n")}
     </>
   );
 }
@@ -151,9 +149,7 @@ function MemoryStats() {
   const uptime = `${(Date.now() - startTime) / 1_000 / 60 / 60}h`;
   const totalMemory = `${total} MB`;
   const totalMemoryUsed = `${used} MB`;
-  const memoryUsed = `${thisProcess} MB (${
-    Math.round(thisProcess / total * 100)
-  }% of total, ${Math.round(thisProcess / used * 100)}% of used)`;
+  const memoryUsed = `${thisProcess} MB (${Math.round(thisProcess / total * 100)}% of total, ${Math.round(thisProcess / used * 100)}% of used)`;
 
   return (
     <>

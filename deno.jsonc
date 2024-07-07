@@ -19,5 +19,6 @@
       "exclude": ["no-explicit-any"]
     }
   },
+  "fmt": { "lineWidth": 2000 },
   "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" }
 }

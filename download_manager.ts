@@ -94,9 +94,7 @@ export class DownloadManager {
     if (!download) {
       download = new Download(this.#client, fileId, partsAvailable, offset);
       this.#downloads.set(fileId, download);
-      this.#downloadQueue.add(() =>
-        download!.start().finally(() => this.#downloads.delete(fileId))
-      );
+      this.#downloadQueue.add(() => download!.start().finally(() => this.#downloads.delete(fileId)));
     }
     return download;
   }

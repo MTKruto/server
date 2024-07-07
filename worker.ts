@@ -117,9 +117,7 @@ function init(id_: number, apiId: number, apiHash: string) {
         formatter(record) {
           const time = record.datetime.toISOString();
           const payload = record.args.length >= 1
-            ? (typeof record.args[0] === "string"
-              ? record.args[0]
-              : JSON.stringify(record.args[0], null, 2))
+            ? (typeof record.args[0] === "string" ? record.args[0] : JSON.stringify(record.args[0], null, 2))
               .trim()
               .split("\n")
               .map((v) => `    ${v}`)

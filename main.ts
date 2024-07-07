@@ -19,13 +19,7 @@
  */
 
 import { log } from "./log.ts";
-import {
-  assertArgCount,
-  badRequest,
-  drop,
-  methodNotAllowed,
-  notFound,
-} from "./responses.ts";
+import { assertArgCount, badRequest, drop, methodNotAllowed, notFound } from "./responses.ts";
 import { addUser } from "./add_user.ts";
 import { displayStats } from "./stats.tsx";
 import { parseCliArgs } from "./cli_args.ts";
@@ -39,16 +33,13 @@ if (typeof args !== "object") {
   log.error(args);
   Deno.exit(1);
 }
-const { port, apiId, apiHash, workerCount, statsPort, addUser: addUser_ } =
-  args;
+const { port, apiId, apiHash, workerCount, statsPort, addUser: addUser_ } = args;
 if (addUser_) {
   await addUser(apiId, apiHash);
 }
 
 log.info(
-  `Starting MTKruto Server with ${workerCount} worker${
-    workerCount == 1 ? "" : "s"
-  }.`,
+  `Starting MTKruto Server with ${workerCount} worker${workerCount == 1 ? "" : "s"}.`,
 );
 
 const workers = new WorkerManager();
