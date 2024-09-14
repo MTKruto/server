@@ -843,6 +843,14 @@ export class Client<C extends Context = Context> extends Composer<C> {
     return this.#request("createInviteLink", args);
   }
 
+  openChat(...args: Parameters<Client_["openChat"]>): Promise<void> {
+    return this.#request("openChat", args);
+  }
+
+  closeChat(...args: Parameters<Client_["closeChat"]>): Promise<void> {
+    return this.#request("closeChat", args);
+  }
+
   //
   // ========================= CALLBACK QUERIES ========================= //
   //

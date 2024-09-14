@@ -126,6 +126,8 @@ export const ALLOWED_METHODS = [
   "addChatMember",
   "addChatMembers",
   "sendMediaGroup",
+  "openChat",
+  "closeChat",
 ] as const;
 
 export type AllowedMethod = (typeof ALLOWED_METHODS)[number];
